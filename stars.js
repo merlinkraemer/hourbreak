@@ -15,6 +15,8 @@ export function startStarfield(canvas) {
   let last = performance.now();
   let frame = 0;
   let running = false;
+  let boostUntil = 0;
+  let boostAmount = 0;
 
   function place(star) {
     star.x = Math.random() * 2 - 1;
@@ -47,7 +49,8 @@ export function startStarfield(canvas) {
     ctx.fillStyle = "#ffffff";
 
     for (const star of stars) {
-      star.z -= DRIFT * delta;
+      const boosted = now < boostUntil;
+      star.z -= DRIFT * (boosted ? 1 + boostAmount * 0.4 : 1) * delta;
       if (star.z <= NEAR) place(star);
 
       const depth = 1 - star.z;
@@ -59,8 +62,8 @@ export function startStarfield(canvas) {
         continue;
       }
 
-      ctx.globalAlpha = 0.2 + depth * 0.8;
-      const size = 1 + Math.round(depth * 2);
+      ctx.globalAlpha = Math.min(1, 0.2 + depth * 0.8 + (boosted ? 0.3 : 0));
+      const size = 1 + Math.round(depth * 2) + (boosted ? Math.min(3, Math.round(boostAmount / 4)) : 0);
       ctx.fillRect(sx, sy, size, size);
     }
 
@@ -86,5 +89,12 @@ export function startStarfield(canvas) {
   resize();
   window.addEventListener("resize", resize);
 
-  return { start, stop };
+  return {
+    start,
+    stop,
+    boost(amount) {
+      boostAmount = Math.max(0, amount);
+      boostUntil = performance.now() + 1500;
+    },
+  };
 }

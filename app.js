@@ -1,4 +1,5 @@
 import { startBanana } from "./banana.js";
+import { startConfetti } from "./confetti.js";
 import { startStarfield } from "./stars.js";
 
 const $ = (id) => document.getElementById(id);
@@ -8,8 +9,10 @@ const el = {
   bg: $("bg"),
   stars: $("stars"),
   banana: $("banana"),
+  confetti: $("confetti"),
   combo: $("combo"),
   burst: $("burst"),
+  party: $("party"),
   title: $("title"),
   hint: $("hint"),
   speaker: $("speaker"),
@@ -25,8 +28,10 @@ const VOLUME = 0.85;
 const MIN_GAP_MIN = 30;
 const WINDOW_BEFORE = 160;
 const WINDOW_AFTER = 220;
-const MAX_LEVEL = 9;
-const COMBO_LABELS = ["x1", "x2", "x5", "x10", "x25", "x50", "x100", "x250", "x500", "x1000"];
+const CRUISE_LEVEL = 12;
+const COMBO_BASE = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
+const COMBO_FACTORS = [2.5, 2, 2, 5, 2, 2];
+const UNITS = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc"];
 
 const GAP_BUCKETS = [
   { weight: 55, min: 30, max: 45 },
@@ -55,14 +60,42 @@ const state = {
   queued: false,
 };
 
+const root = document.documentElement;
 const stars = startStarfield(el.stars);
+const scatter = startConfetti(el.confetti);
 const banana = startBanana(el.banana, { onLanded: handleLanded });
 
 let missTimer = 0;
 let comboHideTimer = 0;
+let chaosTimer = 0;
 
-function level() {
-  return Math.min(state.chain, MAX_LEVEL);
+function chaosRank() {
+  return Math.min(state.chain, CRUISE_LEVEL);
+}
+
+function shortNumber(value) {
+  let unit = 0;
+  let v = value;
+  while (v >= 1000 && unit < UNITS.length - 1) {
+    v /= 1000;
+    unit += 1;
+  }
+  const shown = v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v * 10) / 10 : Math.round(v * 100) / 100;
+  return String(shown).replace(/\.0+$/, "") + UNITS[unit];
+}
+
+function comboLabel(count) {
+  if (count <= 0) return "";
+  if (count <= COMBO_BASE.length) return "x" + COMBO_BASE[count - 1];
+  let value = COMBO_BASE[COMBO_BASE.length - 1];
+  for (let i = COMBO_BASE.length; i < count; i += 1) value *= COMBO_FACTORS[(i - COMBO_BASE.length) % COMBO_FACTORS.length];
+  return "x" + shortNumber(value);
+}
+
+function flipShape(count) {
+  const turns = Math.min(1 + Math.floor(Math.max(0, count - 1) / 3), 6);
+  const tumble = count >= 5 ? Math.min(1 + Math.floor((count - 5) / 4), 3) : 0;
+  return { turns, tumble };
 }
 
 function pickClip() {
@@ -140,43 +173,20 @@ function fire() {
   }
 }
 
-function launch(now) {
+function launch(now, count) {
   state.queued = false;
-  if (!banana || !banana.kickflip()) return;
-  const half = WINDOW_BEFORE;
-  const after = WINDOW_AFTER;
-  const flipMs = banana.flipMs;
-  state.windowFrom = now + flipMs - half;
-  state.windowTo = now + flipMs + after;
+  if (!banana) return;
+  const shape = flipShape(count);
+  const ms = banana.kickflip(shape.turns, shape.tumble);
+  if (!ms) return;
+  state.windowFrom = now + ms - WINDOW_BEFORE;
+  state.windowTo = now + ms + WINDOW_AFTER;
   clearTimeout(missTimer);
   missTimer = setTimeout(closeChain, state.windowTo - now + 30);
 }
 
-function playFail() {
-  if (!state.tricks.length) return;
-  const entry = state.tricks.find((trick) => trick.file === "fail.mp3");
-  if (!entry) return;
-  const node = trickFor(entry.file);
-  try {
-    node.currentTime = 0;
-  } catch {}
-  node.volume = VOLUME;
-  node.playbackRate = 1;
-  const started = node.play();
-  if (started && started.catch) started.catch(() => {});
-}
-
-function closeChain() {
-  if (state.chain > 0) {
-    playFail();
-    if (banana) banana.shake(0.14);
-  }
-  state.chain = 0;
-  el.combo.classList.remove("hit");
-}
-
 function handleLanded() {
-  if (state.queued) launch(performance.now());
+  if (state.queued) launch(performance.now(), state.chain);
 }
 
 function playTrick(count) {
@@ -192,13 +202,26 @@ function playTrick(count) {
   if (started && started.catch) started.catch(() => {});
 }
 
+function playFail() {
+  const entry = state.tricks.find((trick) => trick.file === "fail.mp3");
+  if (!entry) return;
+  const node = trickFor(entry.file);
+  try {
+    node.currentTime = 0;
+  } catch {}
+  node.volume = VOLUME;
+  node.playbackRate = 1;
+  const started = node.play();
+  if (started && started.catch) started.catch(() => {});
+}
+
 function showCombo(count) {
-  const step = level();
-  const label = COMBO_LABELS[Math.min(count - 1, COMBO_LABELS.length - 1)];
-  el.combo.textContent = label + "!".repeat(Math.min(count - 1, 7));
-  el.combo.style.setProperty("--level", String(step));
-  el.combo.style.setProperty("--hue", String((count * 47) % 360));
-  el.combo.style.setProperty("--pop", String(1.15 + step * 0.07));
+  const rank = chaosRank();
+  const hue = (count * 47) % 360;
+  el.combo.textContent = comboLabel(count) + "!".repeat(Math.min(count - 1, 9));
+  el.combo.style.setProperty("--level", String(rank));
+  el.combo.style.setProperty("--hue", String(hue));
+  el.combo.style.setProperty("--pop", String(1.15 + rank * 0.08));
   el.combo.classList.remove("hit");
   void el.combo.offsetWidth;
   el.combo.classList.add("hit");
@@ -207,23 +230,51 @@ function showCombo(count) {
 }
 
 function goCrazy(count) {
-  const step = level();
+  const rank = chaosRank();
   const hue = String((count * 47) % 360);
 
-  el.burst.style.setProperty("--level", String(step));
+  root.style.setProperty("--level", String(rank));
+  root.style.setProperty("--amp", String(3 + rank * 2.8));
+  root.style.setProperty("--hue", hue);
+
+  el.burst.style.setProperty("--level", String(rank));
   el.burst.style.setProperty("--hue", hue);
   el.burst.classList.remove("on");
   void el.burst.offsetWidth;
   el.burst.classList.add("on");
 
-  el.app.style.setProperty("--level", String(step));
-  el.app.style.setProperty("--amp", String(4 + step * 2.4));
-  el.app.classList.remove("shake");
-  void el.app.offsetWidth;
-  el.app.classList.add("shake");
-  setTimeout(() => el.app.classList.remove("shake"), 620);
+  el.party.style.setProperty("--level", String(rank));
+  el.party.style.opacity = String(rank >= 5 ? Math.min((rank - 4) * 0.06, 0.55) : 0);
 
-  if (banana) banana.pop(count);
+  const box = el.banana.getBoundingClientRect();
+  if (scatter) scatter.burst(Math.min(30 + count * 30, 320), box.left + box.width / 2, box.top + box.height / 2);
+
+  root.classList.remove("chaos");
+  void root.offsetWidth;
+  root.classList.add("chaos");
+  clearTimeout(chaosTimer);
+  chaosTimer = setTimeout(() => {
+    root.classList.remove("chaos");
+    el.party.style.opacity = "0";
+  }, Math.max(260, 760 - rank * 34));
+
+  if (banana) {
+    banana.pop(count);
+    banana.setIntensity(1 + rank * 0.35);
+  }
+  if (stars) stars.boost(rank);
+}
+
+function closeChain() {
+  if (state.chain > 0) {
+    playFail();
+    if (banana) {
+      banana.shake(0.16);
+      banana.setIntensity(1);
+    }
+  }
+  state.chain = 0;
+  el.combo.classList.remove("hit");
 }
 
 function hit() {
@@ -240,7 +291,7 @@ function hit() {
     playTrick(state.chain);
     goCrazy(state.chain);
     if (banana.isFlipping()) state.queued = true;
-    else launch(now);
+    else launch(now, state.chain);
     return;
   }
 
@@ -248,7 +299,7 @@ function hit() {
 
   closeChain();
   clearTimeout(missTimer);
-  launch(now);
+  launch(now, 0);
 }
 
 function start() {
@@ -273,6 +324,7 @@ function stop() {
   el.speaker.hidden = true;
   if (stars) stars.stop();
   if (banana) banana.setActive(false);
+  closeChain();
 }
 
 function update() {

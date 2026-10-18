@@ -17,10 +17,11 @@ const FOV = 34;
 const RESOLUTION = 3;
 const SPIN_IDLE = 0.24;
 const SPIN_ACTIVE = 2;
-const FILL = 1.3;
+const FILL = 1.4;
 const FLIP_DOLLY = 0.8;
-const FLIP_SECONDS = 0.62;
-const FLIP_HOP = 0.2;
+const DOLLY_RAMP = 0.14;
+const FLIP_BASE_SECONDS = 0.62;
+const FLIP_HOP = 0.12;
 const SHAKE_MS = 420;
 
 export function startBanana(canvas, options) {
@@ -56,6 +57,10 @@ export function startBanana(canvas, options) {
   let targetSpin = SPIN_IDLE;
   let flipStarted = 0;
   let flipping = false;
+  let flipMs = 620;
+  let flipTurns = 1;
+  let flipTumble = 0;
+  let intensity = 1;
   let popAmount = 0;
   let popStarted = 0;
   let popping = false;
@@ -140,7 +145,7 @@ export function startBanana(canvas, options) {
     const delta = Math.min((now - last) / 1000, 0.05);
     last = now;
 
-    spin += (targetSpin - spin) * Math.min(1, delta * 2.5);
+    spin += (targetSpin * intensity - spin) * Math.min(1, delta * 2.5);
     pivot.rotation.y += spin * delta;
 
     if (popping) {
@@ -165,14 +170,17 @@ export function startBanana(canvas, options) {
     let dolly = 1;
 
     if (flipping) {
-      const progress = Math.min(1, (now - flipStarted) / 1000 / FLIP_SECONDS);
-      const eased = 1 - (1 - progress) ** 3;
-      pivot.rotation.x = eased * Math.PI * 2;
+      const progress = Math.min(1, (now - flipStarted) / flipMs);
+      const eased = progress * progress * (3 - 2 * progress);
+      pivot.rotation.x = eased * Math.PI * 2 * flipTurns;
+      pivot.rotation.z = flipTumble ? eased * Math.PI * 2 * flipTumble : 0;
       pivot.position.y = Math.sin(progress * Math.PI) * (metrics ? metrics.halfY * FLIP_HOP : 0);
-      dolly = 1 + FLIP_DOLLY * Math.sin(progress * Math.PI);
+      const hold = Math.min(1, Math.max(0, Math.min(progress, 1 - progress) / DOLLY_RAMP));
+      dolly = 1 + FLIP_DOLLY * hold;
       if (progress >= 1) {
         flipping = false;
         pivot.rotation.x = 0;
+        pivot.rotation.z = 0;
         pivot.position.y = 0;
         if (typeof settings.onLanded === "function") settings.onLanded();
       }
@@ -187,11 +195,14 @@ export function startBanana(canvas, options) {
     requestAnimationFrame(step);
   }
 
-  function kickflip() {
-    if (flipping) return false;
+  function kickflip(turns, tumble) {
+    if (flipping) return 0;
+    flipTurns = Math.max(1, Math.round(turns || 1));
+    flipTumble = Math.max(0, Math.round(tumble || 0));
+    flipMs = FLIP_BASE_SECONDS * (1 + (flipTurns - 1) * 0.4) * 1000;
     flipStarted = performance.now();
     flipping = true;
-    return true;
+    return flipMs;
   }
 
   async function load() {
@@ -217,7 +228,12 @@ export function startBanana(canvas, options) {
       targetSpin = active ? SPIN_ACTIVE : SPIN_IDLE;
     },
     kickflip,
-    flipMs: FLIP_SECONDS * 1000,
+    get flipMs() {
+      return flipMs;
+    },
+    setIntensity(multiplier) {
+      intensity = Math.max(1, multiplier);
+    },
     shake(strength) {
       const base = metrics ? metrics.halfY : 1;
       shakeAmount = base * (strength || 0.14);

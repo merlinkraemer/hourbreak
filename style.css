@@ -1,4 +1,8 @@
 :root {
+  --level: 0;
+  --amp: 0;
+  --hue: 60;
+  --party: 0;
   --comic: "Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive;
 
   --yellow: #ffff00;
@@ -30,7 +34,7 @@ body {
 
 .bg {
   position: fixed;
-  inset: 0;
+  inset: -2%;
   z-index: -4;
   background-color: #000;
   background-position: center;
@@ -40,7 +44,7 @@ body {
 
 .stars {
   position: fixed;
-  inset: 0;
+  inset: -2%;
   z-index: -3;
   width: 100%;
   height: 100%;
@@ -71,14 +75,18 @@ body {
   --level: 1;
   --hue: 60;
   --pop: 1.15;
-  font-size: calc(clamp(44px, 11vw, 150px) * (1 + (var(--level) - 1) * 0.12));
+  font-size: calc(clamp(44px, 11vw, 150px) * (1 + (var(--level) - 1) * 0.17));
   line-height: 1;
-  letter-spacing: calc((var(--level) - 1) * 0.01em);
+  letter-spacing: calc((var(--level) - 1) * 0.014em);
   color: hsl(var(--hue) 100% 60%);
   text-shadow:
-    0 0 calc(var(--level) * 7px) hsl(var(--hue) 100% 60%),
-    0 0 calc(var(--level) * 22px) hsl(calc(var(--hue) + 40) 100% 55% / .8),
-    3px 3px 0 #000, -3px 3px 0 #000, 3px -3px 0 #000, -3px -3px 0 #000;
+    0 0 calc(var(--level) * 9px) hsl(var(--hue) 100% 60%),
+    0 0 calc(var(--level) * 30px) hsl(calc(var(--hue) + 40) 100% 55% / .85),
+    0 0 calc(var(--level) * 70px) hsl(calc(var(--hue) + 90) 100% 60% / .6),
+    2px 2px 0 hsl(calc(var(--hue) + 180) 100% 50%),
+    -2px 2px 0 hsl(calc(var(--hue) + 120) 100% 50%),
+    2px -2px 0 hsl(calc(var(--hue) + 240) 100% 50%),
+    -2px -2px 0 hsl(calc(var(--hue) + 300) 100% 50%);
   pointer-events: none;
   opacity: 0;
 }
@@ -107,15 +115,49 @@ body {
   font-size: .58em;
 }
 
-.shake { animation: shake calc(.52s - var(--level, 0) * 0.03s) linear; }
+html.chaos #bg,
+html.chaos #stars,
+html.chaos #banana,
+html.chaos .app {
+  animation: rattle calc(.72s - var(--level) * .038s) linear;
+}
 
-@keyframes shake {
-  0%, 100% { transform: translate(0, 0); }
-  15% { transform: translate(calc(-1px * var(--amp, 5)), calc(1px * var(--amp, 5))); }
-  30% { transform: translate(calc(1px * var(--amp, 5)), calc(-1px * var(--amp, 5))); }
-  45% { transform: translate(calc(-0.7px * var(--amp, 5)), calc(-0.5px * var(--amp, 5))); }
-  60% { transform: translate(calc(0.7px * var(--amp, 5)), calc(0.7px * var(--amp, 5))); }
-  80% { transform: translate(calc(-0.4px * var(--amp, 5)), calc(0.3px * var(--amp, 5))); }
+html.chaos .app {
+  filter: hue-rotate(calc(var(--level) * 26deg)) saturate(calc(1 + var(--level) * .14)) contrast(calc(1 + var(--level) * .03));
+}
+
+@keyframes rattle {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  12% { transform: translate(calc(-1px * var(--amp)), calc(1px * var(--amp))) rotate(calc(-.22deg * var(--level))); }
+  25% { transform: translate(calc(1.1px * var(--amp)), calc(-.9px * var(--amp))) rotate(calc(.28deg * var(--level))); }
+  38% { transform: translate(calc(-.85px * var(--amp)), calc(-.6px * var(--amp))) rotate(calc(.18deg * var(--level))); }
+  52% { transform: translate(calc(.9px * var(--amp)), calc(.75px * var(--amp))) rotate(calc(-.24deg * var(--level))); }
+  68% { transform: translate(calc(-.55px * var(--amp)), calc(.45px * var(--amp))) rotate(calc(.11deg * var(--level))); }
+  84% { transform: translate(calc(.45px * var(--amp)), calc(-.35px * var(--amp))) rotate(calc(-.09deg * var(--level))); }
+}
+
+.party {
+  position: fixed;
+  inset: -25%;
+  z-index: 54;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: overlay;
+  background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+  animation: spin calc(2.6s - var(--level) * .17s) linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 56;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .burst {
@@ -143,7 +185,6 @@ body {
   font-weight: 700;
   font-size: clamp(44px, 11vw, 148px);
   line-height: 1.1;
-  color: var(--blue);
 }
 
 .app.live .hint { visibility: visible; }
