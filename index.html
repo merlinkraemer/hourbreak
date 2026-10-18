@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HOURBREAK ~ 1 HOUR OF SILENCE BROKEN BY STUFF</title>
-<meta name="description" content="One hour of silence, occasionally broken by completely random noises. Best viewed in Netscape Navigator 4.0 at 800x600.">
+<title>HOURBREAK&trade; &mdash; the #1 productivity increaser</title>
+<meta name="description" content="HOURBREAK is the only productivity tool you will ever need. Keep this tab open to work better. Trusted by 10,000+ serious professionals.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23ffff00'/%3E%3Cpath d='M0 0h16v3H0zM0 13h16v3H0z' fill='%23000'/%3E%3Cpath d='M2 3h12v10H2z' fill='%23ffb300'/%3E%3Cpath d='M4 5h8v1.6H4zM4 8h8v1.6H4z' fill='%23000'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -14,35 +14,57 @@
 
   <div class="topstrip">
     <marquee behavior="scroll" direction="left" scrollamount="6">
-      ★☆★ WELCOME 2 HOURBREAK ★☆★ TURN UR SPEAKERS UP ★☆★ THIS PAGE IS Y2K COMPLIANT ★☆★ DO NOT ADJUST YOUR MONITOR ★☆★ SIGN MY GUESTBOOK ★☆★ THANX 2 EVERY1 WHO VISITED ★☆★
+      &#128293; HOURBREAK&trade; IS THE #1 PRODUCTIVITY INCREASER FOR SERIOUS PROFESSIONALS &#128175; KEEP THIS TAB OPEN AT ALL TIMES &#128200; DO NOT CLOSE THIS TAB &#128293; WORKS BEST WHEN U FORGET IT IS THERE &#128175; 1000% MORE OUTPUT &#128200; NEUROSCIENCE BACKED &#9888; RESULTS NOT TYPICAL BUT ALSO NOT UNTYPICAL &#128293;
     </marquee>
   </div>
 
   <header class="masthead">
-    <div class="wordart-wrap"><h1 class="wordart">HOURBREAK</h1></div>
+    <div class="rays" aria-hidden="true"></div>
+    <div class="wordart-wrap">
+      <svg class="wordart" viewBox="0 0 1000 330" role="img" aria-label="HOURBREAK">
+        <defs>
+          <linearGradient id="waFill" x1="0" y1="0" x2="0.12" y2="1">
+            <stop offset="0" stop-color="#ffffff"/>
+            <stop offset="0.16" stop-color="#fff200"/>
+            <stop offset="0.34" stop-color="#ff8a00"/>
+            <stop offset="0.52" stop-color="#ff0080"/>
+            <stop offset="0.7" stop-color="#7b2bff"/>
+            <stop offset="0.86" stop-color="#00d0ff"/>
+            <stop offset="1" stop-color="#00ff62"/>
+          </linearGradient>
+          <path id="waArc" d="M30,275 Q500,110 970,275" fill="none"/>
+        </defs>
+        <text class="wa-shadow" transform="translate(10,12)" text-anchor="middle">
+          <textPath href="#waArc" startOffset="50%">HOURBREAK</textPath>
+        </text>
+        <text class="wa-text" text-anchor="middle">
+          <textPath href="#waArc" startOffset="50%">HOURBREAK</textPath>
+        </text>
+      </svg>
+    </div>
     <p class="tagline">
-      <marquee behavior="alternate" scrollamount="4" scrolldelay="60">1 HOUR OF SILENCE, OCCASIONALLY BROKEN BY COMPLETELY RANDOM NOISES</marquee>
+      <marquee behavior="scroll" scrollamount="5" scrolldelay="50">JUST LEAVE THE TAB OPEN. THAT IS THE ENTIRE APP. U WILL GET MORE DONE.</marquee>
     </p>
     <div class="construction">
-      <span class="blink">UNDER CONSTRUCTION</span>
-      <span class="construction-sub">since 1998 &middot; will be finished any day now</span>
+      <span class="blink">SCALING FAST &#128640;</span>
+      <span class="construction-sub">we are hiring &middot; we are not paying</span>
     </div>
   </header>
 
   <section class="panel">
-    <h2 class="panel-bar">&#9668;&#9668; HOURBREAK CONTROL PANEL &#9658;&#9658;</h2>
+    <h2 class="panel-bar">&#9668;&#9668; HOURBREAK FOCUS ENGINE v3.0 &#9658;&#9658;</h2>
     <div class="panel-body">
 
       <div class="rig">
         <div class="lcd">
           <div class="lcd-main">
-            <span class="lcd-label" id="lcd-label">SILENCE</span>
+            <span class="lcd-label" id="lcd-label">FOCUS</span>
             <span class="lcd-big" id="clock">00:00</span>
           </div>
           <div class="lcd-sub">
             <span>SESSION LEFT <b id="session-left">60:00</b></span>
-            <span>NEXT NOISE <b id="next">??:??</b></span>
-            <span>NOISES <b id="noise-count">0</b></span>
+            <span>NEXT SYNC <b id="next">??:??</b></span>
+            <span>OPTIMIZATIONS <b id="noise-count">0</b></span>
           </div>
           <div class="meter" id="meter"><i></i></div>
         </div>
@@ -50,20 +72,20 @@
         <div class="rig-side">
           <div class="eq" id="eq" aria-hidden="true"></div>
           <div class="nowplaying">
-            <span class="np-label">NOW PLAYING</span>
-            <b id="now">&#8212; nothing &#8212;</b>
+            <span class="np-label">ACTIVE MODULE</span>
+            <b id="now">&#8212; none &#8212;</b>
           </div>
           <div class="speaker" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
         </div>
       </div>
 
       <div class="controls">
-        <button id="start" class="bigbtn bigbtn-go">&#9658;&#9658; START THE SILENCE</button>
-        <button id="stop" class="bigbtn" disabled>&#9632; STOP</button>
+        <button id="start" class="bigbtn bigbtn-go">&#9658;&#9658; UNLOCK MY POTENTIAL</button>
+        <button id="stop" class="bigbtn" disabled>&#9632; STOP BEING PRODUCTIVE</button>
       </div>
 
       <div class="controls controls-sub">
-        <label class="field">RUN FOR
+        <label class="field">SESSION LENGTH
           <select id="length">
             <option value="600000">10 MINUTES</option>
             <option value="1800000">30 MINUTES</option>
@@ -72,57 +94,60 @@
             <option value="forever">FOREVER</option>
           </select>
         </label>
-        <label class="field">VOLUME
+        <label class="field">INTENSITY
           <input type="range" id="volume" min="0" max="100" value="85">
           <b id="volume-out">85%</b>
         </label>
         <label class="field cheat">
           <input type="checkbox" id="cheat">
-          SHOW THE COUNTDOWN <span class="cheat-tag">(that's cheating)</span>
+          SHOW SYNC TIMER <span class="cheat-tag">(beta &middot; not recommended)</span>
         </label>
       </div>
 
-      <p class="hint" id="hint">PRESS THE BIG BUTTON, THEN GO DO SOMETHING ELSE FOR AN HOUR.</p>
+      <p class="hint" id="hint">PRESS THE BIG BUTTON. THEN LEAVE THIS TAB OPEN AND GO DO SOMETHING ELSE FOR AN HOUR. THAT IS THE ENTIRE METHODOLOGY.</p>
     </div>
   </section>
 
   <section class="panel">
-    <h2 class="panel-bar">&#9668;&#9668; LIVE NOISE TICKER &#9658;&#9658;</h2>
+    <h2 class="panel-bar">&#9668;&#9668; LIVE PRODUCTIVITY FEED &#9658;&#9658;</h2>
     <div class="panel-body">
       <div class="marq">
-        <marquee id="ticker" scrollamount="3" scrolldelay="40">waiting for the first noise . . .</marquee>
+        <marquee id="ticker" scrollamount="3" scrolldelay="40">initializing neural optimization pipeline . . .</marquee>
       </div>
       <div class="log" id="log" role="log" aria-live="polite"></div>
     </div>
   </section>
 
-  <section class="panel">
-    <h2 class="panel-bar">&#9668;&#9668; THE NOISE LIBRARY <span id="lib-count"></span> &#9658;&#9658;</h2>
+  <details class="panel" id="spec-panel">
+    <summary class="panel-bar">&#9668;&#9668; VIEW THE SOUNDSCAPE ENGINE SPEC <span id="lib-count"></span> &#9658;&#9658; <em>(click to expand)</em></summary>
     <div class="panel-body">
       <div class="tablewrap">
         <table class="jukebox" id="jukebox">
           <thead>
-            <tr><th>#</th><th>NOISE</th><th>SEC</th><th>FIRED</th><th>HEAR IT</th></tr>
+            <tr><th>#</th><th>MODULE</th><th>SEC</th><th>APPLIED</th><th>PREVIEW</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
-      <p class="fineprint">All clips ripped from the information superhighway and squashed down to 32kHz mono, exactly like the inventor of the MP3 intended.</p>
+      <p class="fineprint">Every module was ripped off the information superhighway and recompressed to 32kHz mono, exactly the way the inventor of the MP3 intended.</p>
     </div>
-  </section>
+  </details>
 
   <section class="badges">
+    <span class="badge badge-linkedin">AS SEEN ON<br><b>LINKEDIN</b></span>
+    <span class="badge badge-graph">&#128200;<br><b>+1000% OUTPUT</b></span>
+    <span class="badge badge-neuro">NEURO&shy;SCIENCE<br><b>BACKED</b></span>
+    <span class="badge badge-ai">AI POWERED<br><b>BLOCKCHAIN READY</b></span>
     <span class="badge badge-netscape">BEST VIEWED IN<br><b>NETSCAPE NAVIGATOR 4.0</b></span>
     <span class="badge badge-800">OPTIMIZED FOR<br><b>800 x 600</b></span>
     <span class="badge badge-y2k">100%<br><b>Y2K COMPLIANT</b></span>
-    <span class="badge badge-midi">MIDI:<br><b>ENABLED</b></span>
     <span class="badge badge-award">WINNER!<br><b>COOL SITE OF THE DAY</b></span>
   </section>
 
   <section class="counter-row">
-    <span class="counter-label">YOU ARE VISITOR NUMBER</span>
+    <span class="counter-label">PROFESSIONALS ONBOARDED</span>
     <span class="counter" id="visitor">000000</span>
-    <span class="counter-label">NOISES SINCE 1998 <b id="alltime">0</b></span>
+    <span class="counter-label">OUTPUT INCREASED <b id="alltime">0</b> TIMES</span>
   </section>
 
   <nav class="webring">
@@ -131,17 +156,17 @@
     <a href="#webring" data-ring="random">RANDOM</a>
     <span class="ring-dot">&middot;</span>
     <a href="#webring" data-ring="next">NEXT &raquo;</a>
-    <span class="ring-sep">&#8212; the hourbreak &amp; friends webring &#8212;</span>
-    <a href="#guestbook" id="guestbook-link">SIGN MY GUESTBOOK</a>
+    <span class="ring-sep">&#8212; the hourbreak &amp; friends synergy network &#8212;</span>
+    <a href="#guestbook" id="guestbook-link">READ OUR TESTIMONIALS</a>
   </nav>
 
   <footer class="footer">
     <p>
-      &copy; 1998&ndash;2026 HOURBREAK &middot; LAST UPDATED <span id="updated">10/24/98</span> &middot;
-      <a href="mailto:webmaster@hourbreak.example?subject=i%20love%20hourbreak">E-MAIL THE WEBMASTER</a>
+      &copy; 1998&ndash;2026 HOURBREAK INC. &middot; LAST UPDATED <span id="updated">10/24/98</span> &middot;
+      <a href="mailto:webmaster@hourbreak.example?subject=i%20am%20more%20productive%20now">E-MAIL THE WEBMASTER</a>
     </p>
     <p class="footer-small">
-      hourbreak is not responsible for anything that happens during the silence.<br>
+      hourbreak is not responsible for your sudden uncontrollable productivity.<br>
       hosted on a computer in a bedroom &middot; powered by <b>NOTEPAD.EXE</b>
     </p>
   </footer>
@@ -152,14 +177,14 @@
 
 <div class="modal" id="guestbook" hidden>
   <div class="modal-box">
-    <div class="modal-bar">GUESTBOOK.TXT <button id="guestbook-close" title="close">&times;</button></div>
+    <div class="modal-bar">TESTIMONIALS.TXT <button id="guestbook-close" title="close">&times;</button></div>
     <div class="modal-body">
-      <p class="modal-blurb">Thanks 4 visiting my page!!! plz sign the guestbook, no flamers!!!</p>
+      <p class="modal-blurb">read what 10,000+ serious professionals are saying!!! (unverified)</p>
       <div class="entries" id="entries"></div>
       <form class="sign" id="sign-form">
         <input id="sign-name" maxlength="24" placeholder="ur name" autocomplete="off">
-        <input id="sign-text" maxlength="140" placeholder="ur message" autocomplete="off">
-        <button type="submit" class="bigbtn">SIGN IT</button>
+        <input id="sign-text" maxlength="140" placeholder="ur testimonial" autocomplete="off">
+        <button type="submit" class="bigbtn">SUBMIT</button>
       </form>
     </div>
   </div>

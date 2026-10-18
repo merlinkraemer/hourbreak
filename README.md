@@ -1,10 +1,20 @@
 # hourbreak
 
-One hour of silence, occasionally broken by completely random noises.
+A productivity app.
 
-The joke: you leave the tab open, forget about it, and a metal pipe falls on your head
-twenty minutes later. The gaps are drawn from a heavy-tailed random distribution, so the
-site never settles into a rhythm you can feel.
+It is not a productivity app. It is one hour of silence, occasionally broken by
+completely random noises — presented as a deep-fried, Geocities-era piece of
+productivity software that never once admits what it actually does. You press the big
+button, you leave the tab open because it told you to, and a metal pipe falls on your
+head twenty minutes later.
+
+Nothing on the page says "sound", "noise" or "silence" in the visitor-facing copy. The
+sounds are "optimization modules", the log is a "live productivity feed", the volume
+slider is "intensity", and the 22-clip list is hidden behind a collapsed
+"soundscape engine spec" panel so the first impression stays pristine.
+
+The gaps are drawn from a heavy-tailed random distribution, so the site never settles
+into a rhythm you can feel.
 
 ## Run it
 
@@ -33,7 +43,15 @@ after the previous one, and no clip repeats within its last three plays.
 
 The countdown is hidden by default. There is a checkbox if you want to cheat.
 
-## The noise library
+## The aesthetic
+
+Two layers stacked on purpose. Underneath: 1998 Geocities — tiled starfield, arced
+WordArt logo, `<marquee>`, beveled ridge borders, a visitor counter, webring navigation,
+an 88x31-ish badge row. On top: deep-fried meme — whole-page saturate/contrast boost, a
+tiled turbulence overlay, a spinning starburst behind the logo, chromatic aberration on
+the wordmark, Impact everywhere with hard black outlines, and a few emoji.
+
+## The module library
 
 22 clips, ripped from YouTube and squashed to 32 kHz mono. `scripts/sounds.tsv` is the
 source of truth: `slug`, `youtube id`, on-screen label, max seconds.
@@ -48,7 +66,7 @@ the listed length, fades, normalizes to −15 LUFS, hard-limits at −1 dBFS, an
 `sounds/<slug>.mp3`. It reports RMS and peak for every clip, regenerates
 `sounds/manifest.json`, and retries a failed download three times.
 
-To add a noise: append a row to `scripts/sounds.tsv`, run the script, reload.
+To add a module: append a row to `scripts/sounds.tsv`, run the script, reload.
 
 ## Deploy
 

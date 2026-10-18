@@ -25,6 +25,7 @@
     log: $("log"),
     jukebox: $("jukebox").tBodies[0],
     libCount: $("lib-count"),
+    specPanel: $("spec-panel"),
     visitor: $("visitor"),
     alltime: $("alltime"),
     flash: $("flash"),
@@ -49,7 +50,9 @@
   const MAX_LOG_LINES = 400;
   const TICKER_LINES = 14;
 
-  const TITLE_MARQUEE = " ★ HOURBREAK ★ 1 HOUR OF SILENCE BROKEN BY RANDOM NOISES ★ SIGN MY GUESTBOOK ★ ";
+  const IDLE_TITLE = " ★ HOURBREAK \u2764 JUST KEEP THIS TAB OPEN \u2764 +1000% OUTPUT \u2764 READ OUR TESTIMONIALS ";
+  const IDLE_TICKER = "initializing neural optimization pipeline . . .";
+  const IDLE_HINT = "PRESS THE BIG BUTTON. THEN LEAVE THIS TAB OPEN AND GO DO SOMETHING ELSE FOR AN HOUR. THAT IS THE ENTIRE METHODOLOGY.";
 
   const state = {
     clips: [],
@@ -62,14 +65,14 @@
     forever: false,
     nextAt: 0,
     lastAt: 0,
-    playingUntil: 0,
     noiseCount: 0,
     volume: 0.85,
     titleOffset: 0,
     ticker: [],
     lastClock: "",
-    lastNext: "",
   };
+
+  let endTimer = 0;
 
   const store = {
     get(key, fallback) {
@@ -94,8 +97,7 @@
     const s = Math.max(0, Math.round(ms / 1000));
     if (s < 60) return s + "s";
     const m = Math.floor(s / 60);
-    const r = s % 60;
-    return m + "m " + pad(r, 2) + "s";
+    return m + "m " + pad(s % 60, 2) + "s";
   }
 
   function stamp(at) {
@@ -157,6 +159,12 @@
     el.meterBar.style.width = Math.max(0, Math.min(100, percent)) + "%";
   }
 
+  function syncMeter(percent) {
+    const hidden = !el.cheat.checked;
+    el.meter.classList.toggle("hidden-bar", hidden);
+    setBar(hidden ? 100 : (percent || 0));
+  }
+
   function announce(clip) {
     el.flashText.textContent = clip.label;
     el.flash.classList.remove("on");
@@ -174,8 +182,6 @@
     el.alltime.textContent = total.toLocaleString("en-US");
   }
 
-  let endTimer = 0;
-
   function playClip(clip, manual) {
     const node = audioFor(clip);
     try {
@@ -183,17 +189,18 @@
     } catch {}
     node.volume = state.volume;
     const started = node.play();
-    if (started && started.catch) started.catch(() => {
-      el.hint.textContent = "YOUR BROWSER BLOCKED TEH SOUND. CLICK THE PAGE FIRST, THEN START AGAIN.";
-    });
+    if (started && started.catch) {
+      started.catch(() => {
+        el.hint.textContent = "YOUR BROWSER IS BLOCKING THE PRODUCTIVITY. CLICK ANYWHERE ON THIS PAGE, THEN PRESS THE BIG BUTTON AGAIN.";
+      });
+    }
 
     state.recent.push(clip.file);
     if (state.recent.length > 6) state.recent.shift();
     state.lastAt = Date.now();
-    state.playingUntil = state.lastAt + clip.seconds * 1000;
 
     el.now.textContent = clip.label;
-    el.lcdLabel.textContent = "NOISE!!";
+    el.lcdLabel.textContent = "DEEP WORK";
     el.lcdLabel.classList.add("hot");
     el.eq.classList.add("on");
     announce(clip);
@@ -206,22 +213,18 @@
     if (state.running) {
       state.noiseCount += 1;
       el.noiseCount.textContent = state.noiseCount;
-      logLine("n", "\u25b6 " + clip.label + (manual ? "   (manually triggered, ur cheating)" : ""));
+      logLine("n", ">>> OPTIMIZATION APPLIED: " + clip.label);
       pushTicker(clip.label);
     } else {
-      logLine("n", "\u25b6 " + clip.label + "   (test)");
+      logLine("n", ">>> PREVIEW: " + clip.label + "   (manual run, no output was increased)");
     }
 
     clearTimeout(endTimer);
     endTimer = setTimeout(() => {
-      el.lcdLabel.textContent = "SILENCE";
+      el.lcdLabel.textContent = "FOCUS";
       el.lcdLabel.classList.remove("hot");
       el.eq.classList.remove("on");
     }, clip.seconds * 1000 + 120);
-  }
-
-  function scheduleFrom(now) {
-    state.nextAt = now + pickGapMs();
   }
 
   function fire() {
@@ -229,9 +232,9 @@
     playClip(clip, false);
     if (Math.random() < BURST_CHANCE) {
       state.nextAt = Date.now() + 380 + Math.random() * 760;
-      if (state.running) logLine("h", "   !! double noise incoming !!");
+      if (state.running) logLine("h", "   !! DOUBLE OPTIMIZATION INBOUND !!");
     } else {
-      scheduleFrom(Date.now() + clip.seconds * 1000);
+      state.nextAt = Date.now() + clip.seconds * 1000 + pickGapMs();
     }
   }
 
@@ -249,20 +252,22 @@
     state.recent = [];
     state.hits.clear();
     el.noiseCount.textContent = "0";
+    el.next.textContent = "??:??";
+    el.clock.textContent = "00:00";
     el.log.textContent = "";
-    el.ticker.textContent = "waiting for the first noise . . .";
     state.ticker = [];
+    el.ticker.textContent = IDLE_TICKER;
     paintJukebox();
 
     el.start.disabled = true;
     el.stop.disabled = false;
-    el.hint.textContent = "GO AWAY. COME BACK LATER. IT WILL NOISE WHEN IT NOISES.";
+    el.hint.textContent = "DO NOT CLOSE THIS TAB. PRODUCTIVITY IS ACCUMULATING RIGHT NOW.";
+    syncMeter(0);
 
     logLine("h", "*** SESSION STARTED \u2014 " + (state.forever ? "RUNNING FOREVER" : "RUNNING FOR " + spoken(span)) + " ***");
-    logLine("s", "   .. " + state.clips.length + " noises loaded. nothing is scheduled. everything is scheduled. ..");
+    logLine("s", "   .. " + state.clips.length + " optimization modules armed. nothing is scheduled. everything is scheduled. ..");
 
     audioFor(state.clips[0]);
-    el.meter.classList.toggle("hidden-bar", !el.cheat.checked);
     state.nextAt = Date.now() + pickFirstGapMs();
   }
 
@@ -272,16 +277,16 @@
     el.start.disabled = false;
     el.stop.disabled = true;
     el.eq.classList.remove("on");
-    el.lcdLabel.textContent = "SILENCE";
-    el.lcdLabel.classList.remove("hot");    el.hint.textContent = reason === "time"
-      ? "TIME IS UP. THAT WAS UR HOUR. GO OUTSIDE."
-      : "STOPPED. PRESS START WHENEVER.";
+    el.lcdLabel.textContent = "FOCUS";
+    el.lcdLabel.classList.remove("hot");
+    el.hint.textContent = reason === "time"
+      ? "SESSION COMPLETE. YOUR OUTPUT IS NOW ROUGHLY 1000% HIGHER. GO OUTSIDE."
+      : "PAUSED. YOUR POTENTIAL IS WAITING FOR YOU.";
     logLine("e", reason === "time"
-      ? "*** TIME IS UP \u2014 " + state.noiseCount + " noises in " + spoken(Date.now() - state.startedAt) + " ***"
+      ? "*** SESSION COMPLETE \u2014 " + state.noiseCount + " OPTIMIZATIONS IN " + spoken(Date.now() - state.startedAt) + " ***"
       : "*** STOPPED BY THE OPERATOR ***");
-    el.meter.classList.remove("hidden-bar");
-    setBar(100);
     el.next.textContent = "--:--";
+    syncMeter(100);
   }
 
   function update() {
@@ -296,14 +301,11 @@
         const left = state.forever ? now - state.startedAt : state.endsAt - now;
         el.sessionLeft.textContent = (state.forever ? "\u221e " : "") + mmss(left);
 
-        if (state.cheat.checked) {
+        if (el.cheat.checked) {
           const wait = Math.max(0, state.nextAt - now);
           el.next.textContent = mmss(wait);
           const span = state.nextAt - state.lastAt;
-          setBar(span > 0 ? ((now - state.lastAt) / span) * 100 : 0);
-        } else {
-          el.next.textContent = "??:??";
-          setBar(100);
+          syncMeter(span > 0 ? ((now - state.lastAt) / span) * 100 : 0);
         }
       }
     }
@@ -315,14 +317,14 @@
         state.lastClock = clock;
         el.clock.textContent = clock;
         if (state.running && !state.forever) {
-          document.title = "\u25cf " + clock + " of silence \u2014 HOURBREAK";
+          document.title = "\u25cf " + clock + " of focus \u2014 HOURBREAK";
         }
       }
     }
 
     if (!state.running) {
-      state.titleOffset = (state.titleOffset + 1) % TITLE_MARQUEE.length;
-      document.title = (TITLE_MARQUEE + TITLE_MARQUEE).slice(state.titleOffset, state.titleOffset + 66);
+      state.titleOffset = (state.titleOffset + 1) % IDLE_TITLE.length;
+      document.title = (IDLE_TITLE + IDLE_TITLE).slice(state.titleOffset, state.titleOffset + 62);
     }
   }
 
@@ -371,14 +373,14 @@
       const hear = document.createElement("td");
       const button = document.createElement("button");
       button.type = "button";
-      button.textContent = "\u25b6 PLAY";
+      button.textContent = "\u25b6 PREVIEW";
       button.addEventListener("click", () => playClip(clip, state.running));
       hear.append(button);
 
       row.append(idx, name, sec, hits, hear);
       el.jukebox.append(row);
     });
-    el.libCount.textContent = "(" + state.clips.length + " CLIPS)";
+    el.libCount.textContent = "(" + state.clips.length + " MODULES)";
   }
 
   function buildEqualizer() {
@@ -398,17 +400,17 @@
     }
   }
 
-  const GUESTBOOK_SEED = [
-    ["xXx_sk8er_xXx", "cool site!! i fell asleep and then a metal pipe got me. 10/10"],
+  const TESTIMONIALS = [
+    ["CTO @ STEALTH STARTUP", "i left this tab open for a week and shipped four products. i do not remember any of it. 5 stars"],
+    ["growth hacker", "my output is up 1000%. my colleagues have asked me to stop."],
     ["webmaster (me)", "welcome to my page!!! this is the best i can do"],
-    ["anonymous", "i left this on for my cat. the cat has left the building."],
-    ["k3vin_98", "is this a .wav or a .midi i cant tell. anyway rad"],
+    ["k3vin_98", "i forgot it was open and then i remembered. anyway rad"],
     ["Mom", "very nice honey. please come downstairs for dinner."],
   ];
 
-  function renderGuestbook() {
+  function renderTestimonials() {
     const extra = store.get("hb.guestbook", []);
-    const rows = [...extra, ...GUESTBOOK_SEED];
+    const rows = [...extra, ...TESTIMONIALS];
     el.entries.textContent = "";
     for (const [who, text] of rows) {
       const wrap = document.createElement("div");
@@ -423,8 +425,8 @@
     }
   }
 
-  function openGuestbook() {
-    renderGuestbook();
+  function openTestimonials() {
+    renderTestimonials();
     el.guestbook.hidden = false;
     el.signName.focus();
   }
@@ -468,17 +470,17 @@
     });
 
     el.cheat.addEventListener("change", () => {
-      el.meter.classList.toggle("hidden-bar", !el.cheat.checked && state.running);
+      syncMeter(0);
       if (el.cheat.checked) {
-        logLine("e", "> countdown revealed. the mystery is gone. u did this.");
+        logLine("e", "> sync timer revealed. u are now watching the clock instead of working.");
       } else {
-        logLine("s", "   .. countdown hidden again. mystery restored ..");
+        logLine("s", "   .. sync timer hidden. mystery restored ..");
       }
     });
 
     el.guestbookLink.addEventListener("click", (event) => {
       event.preventDefault();
-      openGuestbook();
+      openTestimonials();
     });
 
     el.guestbookClose.addEventListener("click", () => { el.guestbook.hidden = true; });
@@ -501,23 +503,21 @@
       store.set("hb.guestbook", list.slice(0, 40));
       el.signName.value = "";
       el.signText.value = "";
-      renderGuestbook();
+      renderTestimonials();
     });
 
     document.querySelector(".webring").addEventListener("click", (event) => {
       const link = event.target.closest("[data-ring]");
       if (!link) return;
       event.preventDefault();
-      const which = link.dataset.ring;
-      if (which === "random") {
-        if (!state.clips.length) return;
-        playClip(pickClip(), state.running);
+      if (link.dataset.ring === "random") {
+        if (state.clips.length) playClip(pickClip(), state.running);
         return;
       }
-      const sites = which === "prev"
+      const site = link.dataset.ring === "prev"
         ? "CHEESEORAMA (92 visitors) \u2014 offline since 2001"
         : "DAVE'S GARAGE PAGE (800x600 only) \u2014 offline since 2003";
-      window.alert("YOU HAVE LEFT THE HOURBREAK WEBRING.\n\nThe next site is:\n" + sites + "\n\nThe webring is broken. It is always broken.");
+      window.alert("YOU HAVE LEFT THE HOURBREAK SYNERGY NETWORK.\n\nThe next site is:\n" + site + "\n\nThe network is broken. It is always broken.");
     });
   }
 
@@ -525,7 +525,8 @@
     buildEqualizer();
     buildVisitorCounter();
     wire();
-    setBar(100);
+    syncMeter(100);
+    el.hint.textContent = IDLE_HINT;
 
     let manifest;
     try {
@@ -544,8 +545,8 @@
 
     for (const clip of state.clips) audioFor(clip);
 
-    logLine("h", "*** WELCOME TO HOURBREAK ***");
-    logLine("s", "   .. " + state.clips.length + " noises armed. waiting for u to press the button. ..");
+    logLine("h", "*** WELCOME TO HOURBREAK \u2014 THE #1 PRODUCTIVITY INCREASER ***");
+    logLine("s", "   .. " + state.clips.length + " optimization modules armed. awaiting operator. ..");
 
     setInterval(update, 200);
   }
