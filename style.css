@@ -241,7 +241,7 @@ html.chaos .app {
   color: var(--blue);
   font-family: var(--comic);
   font-weight: 700;
-  font-size: clamp(28px, min(10.5vw, 15vh), 148px);
+  font-size: clamp(28px, min(10.5vw, 15vh), 130px);
   line-height: 1.1;
 }
 
