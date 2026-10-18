@@ -28,6 +28,7 @@ const SESSION_MS = 3600000;
 const BACKGROUND_MS = 30000;
 const HINT_MS = 4000;
 const TRICK_VOLUME = 0.85;
+const OPENER_RATE = 0.85;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
 const WINDOW_BEFORE = 130;
@@ -430,6 +431,7 @@ function hit() {
     return;
   }
 
+  if (state.tricks.length) playTrick(state.tricks[0].file, OPENER_RATE);
   launch(now, 0);
 }
 
