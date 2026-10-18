@@ -8,6 +8,12 @@
 <link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
 <link rel="apple-touch-icon" href="favicon.png">
 <link rel="stylesheet" href="style.css">
+<link rel="modulepreload" href="app.js">
+<link rel="modulepreload" href="banana.js">
+<link rel="modulepreload" href="vendor/three.js">
+<link rel="modulepreload" href="stars.js">
+<link rel="modulepreload" href="confetti.js">
+<link rel="preload" href="banana/banana-bunch.glb" as="fetch" crossorigin>
 </head>
 <body>
 
@@ -21,7 +27,9 @@
 
   <div class="banana-wrap">
     <canvas class="banana" id="banana" aria-hidden="true"></canvas>
+    <span class="ring" id="ring" aria-hidden="true"></span>
     <span class="combo" id="combo" aria-hidden="true"></span>
+    <span class="grade" id="grade" aria-hidden="true"></span>
   </div>
 
   <button class="activate" id="activate" type="button"><span class="speaker" id="speaker" hidden>&#128266;</span><span id="activate-label">activate</span></button>

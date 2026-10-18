@@ -47,7 +47,16 @@ the textures at load, so it reads as a chunky PS1-era sprite. It spins on the ve
 only.
 
 Click it and it does a kickflip: a 360° flip around the horizontal axis with a small hop, 0.62 s,
-eased. Land a second click inside the 620 ms window after it lands and the combo goes up.
+eased. A ring shrinks onto the banana while it flips and flashes white the moment it lands:
+click then and the combo goes up. The window opens 170 ms before landing and stays open 230 ms
+after, shrinking by 4 ms per combo down to 95 / 140 ms. Within 45 ms of landing is `PERFECT!`
+(white ring, extra chaos); the rest of the window is `NICE`. Clicking mid-flip is `TOO EARLY`,
+missing the window is `TOO LATE`: the banana does a damped squash wobble, the ring turns red, and
+a broken combo drops off struck through with the `SLOPY` sound. Clicks are ignored for 0.5 s
+after a break.
+
+Audio is Web Audio buffers, not `<audio>` elements. Trick sounds are fetched after page load;
+each noise is fetched only once it is picked as the next one, so the page loads no noise files.
 Multiplier labels run x1, x2, x5, x10, x25, x50, x100, x250, x500, x1000. Every combo hit plays
 a Tony Hawk trick sound, banded by combo count:
 

@@ -22,7 +22,8 @@ const FLIP_DOLLY = 0.8;
 const DOLLY_RAMP = 0.14;
 const FLIP_BASE_SECONDS = 0.62;
 const FLIP_HOP = 0.12;
-const SHAKE_MS = 420;
+const WOBBLE_MS = 720;
+const WOBBLE_HZ = 5.5;
 
 export function startBanana(canvas, options) {
   const settings = options || {};
@@ -64,8 +65,9 @@ export function startBanana(canvas, options) {
   let popAmount = 0;
   let popStarted = 0;
   let popping = false;
-  let shakeUntil = 0;
-  let shakeAmount = 0;
+  let wobbleStarted = 0;
+  let wobbleUntil = 0;
+  let wobbleAmount = 0;
 
   function frame() {
     const width = Math.max(2, canvas.clientWidth);
@@ -157,15 +159,18 @@ export function startBanana(canvas, options) {
       }
     }
 
-    if (now < shakeUntil) {
-      const decay = (shakeUntil - now) / SHAKE_MS;
-      const energy = shakeAmount * decay;
-      jitter.position.set((Math.random() * 2 - 1) * energy, (Math.random() * 2 - 1) * energy, 0);
-      jitter.rotation.z = (Math.random() * 2 - 1) * 0.16 * decay;
-      jitter.scale.setScalar(1 - 0.14 * decay);
-    } else if (jitter.position.x !== 0 || jitter.position.y !== 0 || jitter.rotation.z !== 0) {
+    if (now < wobbleUntil) {
+      const elapsed = (now - wobbleStarted) / 1000;
+      const decay = Math.pow((wobbleUntil - now) / WOBBLE_MS, 1.6);
+      const swing = Math.sin(elapsed * Math.PI * 2 * WOBBLE_HZ) * decay * wobbleAmount;
+      const base = metrics ? metrics.halfY : 1;
+      jitter.rotation.z = swing * 0.42;
+      jitter.position.set(swing * base * 0.12, -Math.abs(swing) * base * 0.06, 0);
+      jitter.scale.set(1 + 0.1 * Math.abs(swing), 1 - 0.16 * Math.abs(swing), 1);
+    } else if (jitter.rotation.z !== 0 || jitter.position.x !== 0 || jitter.position.y !== 0) {
       jitter.position.set(0, 0, 0);
       jitter.rotation.z = 0;
+      jitter.scale.setScalar(1);
     }
 
     let dolly = 1;
@@ -241,10 +246,10 @@ export function startBanana(canvas, options) {
     setIntensity(multiplier) {
       intensity = Math.max(1, multiplier);
     },
-    shake(strength) {
-      const base = metrics ? metrics.halfY : 1;
-      shakeAmount = base * (strength || 0.14);
-      shakeUntil = performance.now() + SHAKE_MS;
+    wobble(strength) {
+      wobbleAmount = Math.min(Math.max(strength || 1, 0), 1.5);
+      wobbleStarted = performance.now();
+      wobbleUntil = wobbleStarted + WOBBLE_MS;
     },
     pop(amount) {
       popAmount = Math.min(Math.max(amount, 0), 0.9);

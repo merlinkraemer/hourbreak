@@ -43,15 +43,15 @@ export function startConfetti(canvas) {
         continue;
       }
 
-      ctx.save();
-      ctx.translate(part.x, part.y);
-      ctx.rotate(part.rot);
+      const cos = Math.cos(part.rot);
+      const sin = Math.sin(part.rot);
+      ctx.setTransform(cos, sin, -sin, cos, part.x, part.y);
       ctx.globalAlpha = Math.min(1, part.life * 1.6);
       ctx.fillStyle = part.color;
       ctx.fillRect(-part.size * 0.5, -part.size * 0.35, part.size, part.size * 0.7);
-      ctx.restore();
     }
 
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
 
     if (parts.length) frame = requestAnimationFrame(loop);

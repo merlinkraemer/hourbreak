@@ -11,6 +11,8 @@ const el = {
   banana: $("banana"),
   confetti: $("confetti"),
   combo: $("combo"),
+  grade: $("grade"),
+  ring: $("ring"),
   burst: $("burst"),
   party: $("party"),
   strobe: $("strobe"),
@@ -28,9 +30,13 @@ const BACKGROUND_MS = 30000;
 const TRICK_VOLUME = 0.85;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
-const WINDOW_BEFORE = 130;
-const WINDOW_AFTER = 190;
-const LOCK_MS = 750;
+const WINDOW_BEFORE = 170;
+const WINDOW_AFTER = 230;
+const WINDOW_FLOOR_BEFORE = 95;
+const WINDOW_FLOOR_AFTER = 140;
+const WINDOW_SHRINK = 4;
+const PERFECT_MS = 45;
+const LOCK_MS = 500;
 const CRUISE_RANK = 20;
 const COMBO_BASE = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 const COMBO_FACTORS = [2.5, 2, 2, 5, 2, 2];
@@ -48,8 +54,8 @@ const BURST_CHANCE = 0.09;
 const state = {
   clips: [],
   tricks: [],
-  audio: new Map(),
-  trickAudio: new Map(),
+  upcoming: null,
+  trickSource: null,
   backgrounds: [],
   bgIndex: -1,
   recent: [],
@@ -60,6 +66,7 @@ const state = {
   chain: 0,
   windowFrom: 0,
   windowTo: 0,
+  landAt: 0,
   attemptLive: false,
   queued: false,
   lockUntil: 0,
@@ -73,9 +80,11 @@ const banana = startBanana(el.banana, { onLanded: handleLanded });
 let missTimer = 0;
 let comboHideTimer = 0;
 let chaosTimer = 0;
+let gradeTimer = 0;
 let audioContext = null;
 let loudInput = null;
-const loudNodes = new WeakSet();
+let trickInput = null;
+const buffers = new Map();
 
 function heat() {
   return Math.min(2, state.chain / 11);
@@ -149,77 +158,65 @@ function clipCurve() {
   return curve;
 }
 
-function ensureAudioGraph() {
-  if (!audioContext) {
-    const Ctx = window.AudioContext || window.webkitAudioContext;
-    if (!Ctx) return false;
-    try {
-      audioContext = new Ctx();
-      const gain = audioContext.createGain();
-      gain.gain.value = LOUD_GAIN;
-      const shaper = audioContext.createWaveShaper();
-      shaper.curve = clipCurve();
-      shaper.oversample = "2x";
-      gain.connect(shaper);
-      shaper.connect(audioContext.destination);
-      loudInput = gain;
-    } catch {
-      audioContext = null;
-      loudInput = null;
-      return false;
-    }
-  }
-  if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
-  return loudInput !== null;
+function audioGraph() {
+  if (audioContext) return audioContext;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  audioContext = new Ctx();
+  const gain = audioContext.createGain();
+  gain.gain.value = LOUD_GAIN;
+  const shaper = audioContext.createWaveShaper();
+  shaper.curve = clipCurve();
+  shaper.oversample = "2x";
+  gain.connect(shaper);
+  shaper.connect(audioContext.destination);
+  loudInput = gain;
+  trickInput = audioContext.createGain();
+  trickInput.gain.value = TRICK_VOLUME;
+  trickInput.connect(audioContext.destination);
+  return audioContext;
 }
 
-function attachLoud(node) {
-  if (!ensureAudioGraph()) {
-    node.volume = 1;
-    return;
-  }
-  if (!loudNodes.has(node)) {
-    try {
-      audioContext.createMediaElementSource(node).connect(loudInput);
-      loudNodes.add(node);
-    } catch {
-      node.volume = 1;
-      return;
-    }
-  }
-  node.volume = 1;
+function wakeAudio() {
+  const ctx = audioGraph();
+  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
 }
 
-function audioFor(clip) {
-  let node = state.audio.get(clip.file);
-  if (!node) {
-    node = new Audio("sounds/" + clip.file);
-    node.preload = "auto";
-    node.crossOrigin = "anonymous";
-    state.audio.set(clip.file, node);
+function loadBuffer(url) {
+  let pending = buffers.get(url);
+  if (!pending) {
+    const ctx = audioGraph();
+    if (!ctx) return Promise.reject(new Error("Web Audio unavailable"));
+    pending = fetch(url)
+      .then((response) => {
+        if (!response.ok) throw new Error(url + " " + response.status);
+        return response.arrayBuffer();
+      })
+      .then((data) => ctx.decodeAudioData(data));
+    pending.catch(() => buffers.delete(url));
+    buffers.set(url, pending);
   }
-  attachLoud(node);
-  return node;
+  return pending;
 }
 
-function trickFor(file) {
-  let node = state.trickAudio.get(file);
-  if (!node) {
-    node = new Audio("tricks/" + file);
-    node.preload = "auto";
-    node.volume = TRICK_VOLUME;
-    state.trickAudio.set(file, node);
-  }
-  return node;
+function playBuffer(url, input, rate) {
+  return loadBuffer(url).then((buffer) => {
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.playbackRate.value = rate || 1;
+    source.connect(input);
+    source.start();
+    return source;
+  });
+}
+
+function queueClip() {
+  state.upcoming = pickClip();
+  loadBuffer("sounds/" + state.upcoming.file).catch(() => {});
 }
 
 function playClip(clip) {
-  const node = audioFor(clip);
-  try {
-    node.currentTime = 0;
-  } catch {}
-  const started = node.play();
-  if (started && started.catch) started.catch(() => {});
+  playBuffer("sounds/" + clip.file, loudInput).catch(() => {});
 
   state.recent.push(clip.file);
   if (state.recent.length > 6) state.recent.shift();
@@ -234,8 +231,9 @@ function playClip(clip) {
 }
 
 function fire() {
-  const clip = pickClip();
+  const clip = state.upcoming || pickClip();
   playClip(clip);
+  queueClip();
   if (Math.random() < BURST_CHANCE) {
     state.nextAt = Date.now() + 380 + Math.random() * 760;
   } else {
@@ -253,40 +251,61 @@ function launch(now, count) {
     state.attemptLive = false;
     return;
   }
-  state.windowFrom = now + ms - WINDOW_BEFORE;
-  state.windowTo = now + ms + WINDOW_AFTER;
+  const shrink = count * WINDOW_SHRINK;
+  state.landAt = now + ms;
+  state.windowFrom = state.landAt - Math.max(WINDOW_FLOOR_BEFORE, WINDOW_BEFORE - shrink);
+  state.windowTo = state.landAt + Math.max(WINDOW_FLOOR_AFTER, WINDOW_AFTER - shrink);
+  showRing(ms, state.windowTo - state.landAt);
   clearTimeout(missTimer);
-  missTimer = setTimeout(closeChain, state.windowTo - now + 30);
+  missTimer = setTimeout(() => closeChain("late"), state.windowTo - now + 30);
+}
+
+function restart(node, ...classes) {
+  node.classList.remove("closing", "open", "miss", "hit", "broke", "perfect");
+  void node.offsetWidth;
+  node.classList.add(...classes);
+}
+
+function showRing(closeMs, openMs) {
+  el.ring.style.setProperty("--close", Math.round(closeMs) + "ms");
+  el.ring.style.setProperty("--open", Math.round(openMs) + "ms");
+  el.ring.style.setProperty("--hue", String((state.chain * 47 + 60) % 360));
+  restart(el.ring, "closing");
+}
+
+function showGrade(text, kind) {
+  el.grade.textContent = text;
+  restart(el.grade, kind);
+  clearTimeout(gradeTimer);
+  gradeTimer = setTimeout(() => el.grade.classList.remove("hit", "perfect", "miss"), 900);
 }
 
 function handleLanded() {
   if (state.queued) launch(performance.now(), state.chain);
 }
 
-function playTrick(count) {
+function playTrick(file, rate) {
+  if (!audioContext) return;
+  if (state.trickSource) {
+    try {
+      state.trickSource.stop();
+    } catch {}
+  }
+  playBuffer("tricks/" + file, trickInput, rate)
+    .then((source) => {
+      state.trickSource = source;
+    })
+    .catch(() => {});
+}
+
+function playComboTrick(count) {
   if (!state.tricks.length) return;
   const band = Math.min(Math.floor((count - 1) / 5), state.tricks.length - 1);
-  const node = trickFor(state.tricks[band].file);
-  try {
-    node.currentTime = 0;
-  } catch {}
-  node.volume = TRICK_VOLUME;
-  node.playbackRate = Math.min(1 + (count - 1) * 0.07, 2.1);
-  const started = node.play();
-  if (started && started.catch) started.catch(() => {});
+  playTrick(state.tricks[band].file, Math.min(1 + (count - 1) * 0.07, 2.1));
 }
 
 function playFail() {
-  const entry = state.tricks.find((trick) => trick.file === "fail.mp3");
-  if (!entry) return;
-  const node = trickFor(entry.file);
-  try {
-    node.currentTime = 0;
-  } catch {}
-  node.volume = TRICK_VOLUME;
-  node.playbackRate = 1;
-  const started = node.play();
-  if (started && started.catch) started.catch(() => {});
+  if (state.tricks.some((trick) => trick.file === "fail.mp3")) playTrick("fail.mp3", 1);
 }
 
 function showCombo(count) {
@@ -295,9 +314,7 @@ function showCombo(count) {
   el.combo.style.setProperty("--level", String(rank));
   el.combo.style.setProperty("--hue", String((count * 47) % 360));
   el.combo.style.setProperty("--pop", String(1.1 + heat() * 0.45));
-  el.combo.classList.remove("hit");
-  void el.combo.offsetWidth;
-  el.combo.classList.add("hit");
+  restart(el.combo, "hit");
   clearTimeout(comboHideTimer);
   comboHideTimer = setTimeout(() => el.combo.classList.remove("hit"), 1000);
 }
@@ -322,8 +339,8 @@ function goCrazy(count) {
   el.burst.classList.add("on");
 
   el.party.style.setProperty("--level", String(rank));
-  el.party.style.opacity = String(power >= 0.55 ? Math.min((power - 0.45) * 0.5, 0.6) : 0);
-  el.strobe.style.opacity = String(power >= 1 ? Math.min((power - 0.9) * 0.3, 0.28) : 0);
+  el.party.style.opacity = String(power >= 0.55 ? Math.min((power - 0.45) * 0.3, 0.32) : 0);
+  el.strobe.style.opacity = String(power >= 1 ? Math.min((power - 0.9) * 0.18, 0.16) : 0);
 
   const box = el.banana.getBoundingClientRect();
   if (scatter) {
@@ -347,20 +364,31 @@ function goCrazy(count) {
   if (stars) stars.boost(power * 16);
 }
 
-function closeChain() {
+function closeChain(reason) {
   const broke = state.chain > 0;
-  if (broke) {
-    playFail();
+  const clicked = reason === "early";
+  if (broke || clicked) {
+    if (broke) playFail();
     if (banana) {
       banana.abort();
-      banana.shake(0.22);
+      banana.wobble(broke ? 1 : 0.55);
       banana.setIntensity(1);
     }
+    restart(el.ring, "miss");
+    if (reason) showGrade(clicked ? "TOO EARLY" : "TOO LATE", "miss");
+  } else {
+    el.ring.classList.remove("closing", "open");
+  }
+  if (broke) {
+    el.combo.textContent = comboLabel(state.chain);
+    restart(el.combo, "broke");
+  } else {
+    el.combo.classList.remove("hit");
   }
   state.chain = 0;
   state.attemptLive = false;
+  state.queued = false;
   state.lockUntil = performance.now() + LOCK_MS;
-  el.combo.classList.remove("hit");
 }
 
 function hit() {
@@ -370,21 +398,24 @@ function hit() {
   const inWindow = now >= state.windowFrom && now <= state.windowTo;
 
   if (inWindow) {
+    const perfect = Math.abs(now - state.landAt) <= PERFECT_MS;
     state.chain += 1;
     state.windowFrom = 0;
     state.windowTo = 0;
     state.attemptLive = true;
     clearTimeout(missTimer);
+    restart(el.ring, perfect ? "perfect" : "hit");
+    showGrade(perfect ? "PERFECT!" : "NICE", perfect ? "perfect" : "hit");
     showCombo(state.chain);
-    playTrick(state.chain);
-    goCrazy(state.chain);
+    playComboTrick(state.chain);
+    goCrazy(state.chain + (perfect ? 2 : 0));
     if (banana.isFlipping()) state.queued = true;
     else launch(now, state.chain);
     return;
   }
 
   if (state.attemptLive) {
-    closeChain();
+    closeChain("early");
     return;
   }
 
@@ -402,6 +433,7 @@ function start() {
   el.speaker.hidden = false;
   if (stars) stars.start();
   if (banana) banana.setActive(true);
+  queueClip();
   state.nextAt = Date.now() + (FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random()) * 1000;
 }
 
@@ -425,40 +457,14 @@ function update() {
   if (Date.now() >= state.nextAt) fire();
 }
 
-let audioUnlocked = false;
-function unlock() {
-  ensureAudioGraph();
-  if (audioUnlocked) return;
-  audioUnlocked = true;
-  const nodes = [
-    ...state.clips.map((clip) => audioFor(clip)),
-    ...state.tricks.map((trick) => trickFor(trick.file)),
-  ];
-  for (const node of nodes) {
-    const was = node.volume;
-    node.volume = 0;
-    const started = node.play();
-    if (started && started.then) {
-      started.then(() => {
-        node.pause();
-        node.currentTime = 0;
-        node.volume = was;
-      }).catch(() => {
-        node.volume = was;
-      });
-    }
-  }
-}
-
-root.addEventListener("pointerdown", () => {
-  ensureAudioGraph();
-});
+root.addEventListener("pointerdown", wakeAudio);
+root.addEventListener("touchend", wakeAudio);
 
 el.activate.addEventListener("click", () => {
   if (state.running) {
     stop();
   } else {
-    unlock();
+    wakeAudio();
     start();
   }
 });
@@ -473,7 +479,6 @@ async function loadSounds() {
   } catch {
     return;
   }
-  for (const clip of state.clips) audioFor(clip);
   setInterval(update, 200);
 }
 
@@ -485,7 +490,7 @@ async function loadTricks() {
   } catch {
     return;
   }
-  for (const trick of state.tricks) trickFor(trick.file);
+  for (const trick of state.tricks) loadBuffer("tricks/" + trick.file).catch(() => {});
 }
 
 async function loadBackgrounds() {
@@ -504,4 +509,5 @@ async function loadBackgrounds() {
 splitTitle();
 loadBackgrounds();
 loadSounds();
-loadTricks();
+if (document.readyState === "complete") loadTricks();
+else window.addEventListener("load", loadTricks, { once: true });
