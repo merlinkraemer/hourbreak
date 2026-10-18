@@ -1,8 +1,9 @@
 :root {
   --level: 0;
+  --chaos: 0;
   --amp: 0;
+  --tilt: 0;
   --hue: 60;
-  --party: 0;
   --comic: "Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive;
 
   --yellow: #ffff00;
@@ -68,21 +69,21 @@ body {
 .combo {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 42%;
   transform: translate(-50%, -50%);
   font-family: var(--comic);
   font-weight: 700;
   --level: 1;
   --hue: 60;
   --pop: 1.15;
-  font-size: calc(clamp(44px, 11vw, 150px) * (1 + (var(--level) - 1) * 0.17));
+  font-size: calc(clamp(32px, 6vw, 78px) * (1 + (var(--level) - 1) * 0.05));
   line-height: 1;
-  letter-spacing: calc((var(--level) - 1) * 0.014em);
+  letter-spacing: calc((var(--level) - 1) * 0.012em);
   color: hsl(var(--hue) 100% 60%);
   text-shadow:
-    0 0 calc(var(--level) * 9px) hsl(var(--hue) 100% 60%),
-    0 0 calc(var(--level) * 30px) hsl(calc(var(--hue) + 40) 100% 55% / .85),
-    0 0 calc(var(--level) * 70px) hsl(calc(var(--hue) + 90) 100% 60% / .6),
+    0 0 calc(var(--level) * 5px) hsl(var(--hue) 100% 60%),
+    0 0 calc(var(--level) * 16px) hsl(calc(var(--hue) + 40) 100% 55% / .85),
+    0 0 calc(var(--level) * 34px) hsl(calc(var(--hue) + 90) 100% 60% / .6),
     2px 2px 0 hsl(calc(var(--hue) + 180) 100% 50%),
     -2px 2px 0 hsl(calc(var(--hue) + 120) 100% 50%),
     2px -2px 0 hsl(calc(var(--hue) + 240) 100% 50%),
@@ -111,29 +112,84 @@ body {
   image-rendering: crisp-edges;
 }
 
-.title .x {
-  font-size: .58em;
-}
-
-html.chaos #bg,
+html.chaos .app,
 html.chaos #stars,
-html.chaos #banana,
-html.chaos .app {
-  animation: rattle calc(.72s - var(--level) * .038s) linear;
+html.chaos #banana {
+  animation: rattle calc(.72s - var(--chaos) * .22s) linear;
+}
+
+html.chaos #bg {
+  animation: bgflex calc(1.1s - var(--chaos) * .4s) ease-in-out infinite alternate;
+}
+
+html.chaos .title,
+html.chaos .activate,
+html.chaos .hint {
+  animation: wobble calc(.95s - var(--chaos) * .32s) ease-in-out infinite alternate;
+}
+
+html.chaos .title span {
+  animation: letterjump calc(.75s - var(--chaos) * .34s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--i) * 38ms);
+}
+
+html.chaos.hard .title span {
+  color: hsl(calc(var(--hue) + var(--i) * 24) 100% 55%);
+}
+
+html.chaos.hard #banana {
+  filter: hue-rotate(calc(var(--hue) * 1deg)) saturate(1.7) contrast(1.15);
+}
+
+@keyframes wobble {
+  from { transform: translate(calc(-1px * var(--amp)), calc(.6px * var(--amp))) rotate(calc(-.6deg * var(--tilt))) scale(calc(1 + var(--chaos) * .05)); }
+  to { transform: translate(calc(1px * var(--amp)), calc(-.6px * var(--amp))) rotate(calc(.6deg * var(--tilt))) scale(calc(1 - var(--chaos) * .04)); }
+}
+
+@keyframes letterjump {
+  from { transform: translateY(calc(-1px * var(--amp) * .9)) rotate(calc(-2.4deg * var(--tilt))) scale(1); }
+  to { transform: translateY(calc(1px * var(--amp))) rotate(calc(3.4deg * var(--tilt))) scale(calc(1 + var(--chaos) * .14)); }
+}
+
+@keyframes bgflex {
+  from {
+    transform: scale(1.02) translate(calc(-.8px * var(--amp)), calc(.5px * var(--amp))) rotate(calc(-.5deg * var(--tilt)));
+    filter: hue-rotate(calc(var(--chaos) * -16deg)) saturate(calc(1 + var(--chaos) * .6));
+  }
+  to {
+    transform: scale(calc(1.03 + var(--chaos) * .06)) translate(calc(.8px * var(--amp)), calc(-.5px * var(--amp))) rotate(calc(.5deg * var(--tilt)));
+    filter: hue-rotate(calc(var(--chaos) * 16deg)) saturate(calc(1 + var(--chaos) * .6));
+  }
 }
 
 html.chaos .app {
-  filter: hue-rotate(calc(var(--level) * 26deg)) saturate(calc(1 + var(--level) * .14)) contrast(calc(1 + var(--level) * .03));
+  filter: hue-rotate(calc(var(--level) * 22deg)) saturate(calc(1 + var(--level) * .12)) contrast(calc(1 + var(--level) * .025));
 }
 
 @keyframes rattle {
   0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  12% { transform: translate(calc(-1px * var(--amp)), calc(1px * var(--amp))) rotate(calc(-.22deg * var(--level))); }
-  25% { transform: translate(calc(1.1px * var(--amp)), calc(-.9px * var(--amp))) rotate(calc(.28deg * var(--level))); }
-  38% { transform: translate(calc(-.85px * var(--amp)), calc(-.6px * var(--amp))) rotate(calc(.18deg * var(--level))); }
-  52% { transform: translate(calc(.9px * var(--amp)), calc(.75px * var(--amp))) rotate(calc(-.24deg * var(--level))); }
-  68% { transform: translate(calc(-.55px * var(--amp)), calc(.45px * var(--amp))) rotate(calc(.11deg * var(--level))); }
-  84% { transform: translate(calc(.45px * var(--amp)), calc(-.35px * var(--amp))) rotate(calc(-.09deg * var(--level))); }
+  12% { transform: translate(calc(-1px * var(--amp)), calc(1px * var(--amp))) rotate(calc(-.22deg * var(--tilt))); }
+  25% { transform: translate(calc(1.1px * var(--amp)), calc(-.9px * var(--amp))) rotate(calc(.28deg * var(--tilt))); }
+  38% { transform: translate(calc(-.85px * var(--amp)), calc(-.6px * var(--amp))) rotate(calc(.18deg * var(--tilt))); }
+  52% { transform: translate(calc(.9px * var(--amp)), calc(.75px * var(--amp))) rotate(calc(-.24deg * var(--tilt))); }
+  68% { transform: translate(calc(-.55px * var(--amp)), calc(.45px * var(--amp))) rotate(calc(.11deg * var(--tilt))); }
+  84% { transform: translate(calc(.45px * var(--amp)), calc(-.35px * var(--amp))) rotate(calc(-.09deg * var(--tilt))); }
+}
+
+.strobe {
+  position: fixed;
+  inset: 0;
+  z-index: 57;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: color-dodge;
+  animation: strobe .26s steps(2, end) infinite;
+}
+
+@keyframes strobe {
+  0% { background: hsl(var(--hue) 100% 50%); }
+  50% { background: hsl(calc(var(--hue) + 180) 100% 50%); }
+  100% { background: hsl(calc(var(--hue) + 90) 100% 50%); }
 }
 
 .party {
@@ -144,7 +200,7 @@ html.chaos .app {
   opacity: 0;
   mix-blend-mode: overlay;
   background: conic-gradient(from 0deg, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
-  animation: spin calc(2.6s - var(--level) * .17s) linear infinite;
+  animation: spin calc(2.8s - var(--chaos) * 1.6s) linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -167,7 +223,7 @@ html.chaos .app {
   pointer-events: none;
   opacity: 0;
   mix-blend-mode: screen;
-  background: radial-gradient(circle at 50% 42%, hsl(var(--hue, 60) 100% 60% / .6), transparent 64%);
+  background: radial-gradient(circle at 50% 42%, hsl(var(--hue, 60) 100% 60% / var(--burst, .6)), transparent 64%);
 }
 
 .burst.on { animation: burstout calc(.75s - var(--level, 0) * 0.05s) ease-out forwards; }
@@ -180,6 +236,7 @@ html.chaos .app {
 
 .title {
   margin: 0 0 1.4vw;
+  white-space: pre-wrap;
   color: var(--blue);
   font-family: var(--comic);
   font-weight: 700;

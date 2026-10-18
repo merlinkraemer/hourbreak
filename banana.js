@@ -239,8 +239,8 @@ export function startBanana(canvas, options) {
       shakeAmount = base * (strength || 0.14);
       shakeUntil = performance.now() + SHAKE_MS;
     },
-    pop(level) {
-      popAmount = Math.min(level, 9) * 0.055;
+    pop(amount) {
+      popAmount = Math.min(Math.max(amount, 0), 0.9);
       popStarted = performance.now();
       popping = true;
     },
