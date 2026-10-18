@@ -16,7 +16,8 @@ combo-3|tony-hawk-trick-combo-3.mp3|COMBO 3
 combo-4|tony-hawk-trick-combo-4.mp3|COMBO 4
 combo-5|tony-hawk-trick-combo-5.mp3|COMBO 5
 combo-6|tony-hawk-trick-combo-6.mp3|COMBO 6
-combo-7|tony-hawk-trick-combo-7.mp3|COMBO 7"
+combo-7|tony-hawk-trick-combo-7.mp3|COMBO 7
+fail|slopy-tony-hawk-pskt2.mp3|SLOPY"
 
 while IFS='|' read -r slug remote label; do
   [[ -z "$slug" ]] && continue
@@ -41,8 +42,8 @@ HB_OUT="$OUT" HB_MANIFEST="$MANIFEST" python3 - <<'PY'
 import json, os
 
 out = os.environ["HB_OUT"]
-order = ["special-trick"] + ["combo-%d" % i for i in range(1, 8)]
-labels = {"special-trick": "SPECIAL TRICK"}
+order = ["special-trick"] + ["combo-%d" % i for i in range(1, 8)] + ["fail"]
+labels = {"special-trick": "SPECIAL TRICK", "fail": "SLOPY"}
 for i in range(1, 8):
     labels["combo-%d" % i] = "COMBO %d" % i
 
