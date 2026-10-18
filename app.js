@@ -321,24 +321,23 @@ function playTrick(file, rate) {
       state.trickSource.stop();
     } catch {}
   }
-  playBuffer("tricks/" + file, trickInput, rate * (file === ENTER_FILE ? centShift() : 1))
+  playBuffer("tricks/" + file, trickInput, rate)
     .then((source) => {
       state.trickSource = source;
     })
     .catch(() => {});
 }
 
-function playEnterLayer() {
+function playEnterLayer(rate) {
   if (!audioContext) return;
-  playBuffer("tricks/" + ENTER_FILE, enterInput, centShift()).catch(() => {});
+  playBuffer("tricks/" + ENTER_FILE, enterInput, (rate || 1) * centShift()).catch(() => {});
 }
 
 function playComboTrick(count) {
   if (!state.tricks.length) return;
   const band = Math.min(Math.floor((count - 1) / 5), state.tricks.length - 1);
-  const file = state.tricks[band].file;
-  playTrick(file, Math.min(1 + (count - 1) * 0.07, 2.1));
-  if (file !== ENTER_FILE) playEnterLayer();
+  playTrick(state.tricks[band].file, Math.min(1 + (count - 1) * 0.07, 2.1));
+  playEnterLayer(1);
 }
 
 function playFail() {
@@ -449,7 +448,10 @@ function hit() {
     return;
   }
 
-  if (state.tricks.length) playTrick(state.tricks[0].file, OPENER_RATE);
+  if (state.tricks.length) {
+    playTrick(state.tricks[0].file, OPENER_RATE);
+    playEnterLayer(OPENER_RATE);
+  }
   launch(now, 0);
 }
 
@@ -536,6 +538,7 @@ async function loadTricks() {
     return;
   }
   for (const trick of state.tricks) loadBuffer("tricks/" + trick.file).catch(() => {});
+  loadBuffer("tricks/" + ENTER_FILE).catch(() => {});
 }
 
 async function loadBackgrounds() {

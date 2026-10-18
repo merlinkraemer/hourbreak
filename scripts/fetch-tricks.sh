@@ -9,7 +9,8 @@ trap 'rm -rf "$TMP"' EXIT
 
 mkdir -p "$OUT"
 
-LIST="combo-1|tony-hawk-trick-combo-1.mp3|COMBO 1
+LIST="special-trick|tony-hawk-special-trick-sound-effect.mp3|SPECIAL TRICK
+combo-1|tony-hawk-trick-combo-1.mp3|COMBO 1
 combo-2|tony-hawk-trick-combo-2.mp3|COMBO 2
 combo-3|tony-hawk-trick-combo-3.mp3|COMBO 3
 combo-4|tony-hawk-trick-combo-4.mp3|COMBO 4
@@ -41,8 +42,8 @@ HB_OUT="$OUT" HB_MANIFEST="$MANIFEST" python3 - <<'PY'
 import json, os
 
 out = os.environ["HB_OUT"]
-order = ["enter"] + ["combo-%d" % i for i in range(1, 8)] + ["fail"]
-labels = {"enter": "ENTER", "fail": "SLOPY"}
+order = ["special-trick"] + ["combo-%d" % i for i in range(1, 8)] + ["fail"]
+labels = {"special-trick": "SPECIAL TRICK", "fail": "SLOPY"}
 for i in range(1, 8):
     labels["combo-%d" % i] = "COMBO %d" % i
 
