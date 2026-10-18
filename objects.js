@@ -1,6 +1,5 @@
 import {
   Box3,
-  Clock,
   DoubleSide,
   GLTFLoader,
   Group,
@@ -41,7 +40,7 @@ export function startObjectLayer(canvas) {
   const camera = new PerspectiveCamera(FOV, 1, 0.1, 60);
   camera.position.z = CAMERA_Z;
 
-  const clock = new Clock();
+  let last = performance.now();
   const prototypes = [];
   const alive = [];
   let halfWidth = 4;
@@ -116,8 +115,9 @@ export function startObjectLayer(canvas) {
   }
 
   function step() {
-    const delta = Math.min(clock.getDelta(), 0.05);
     const now = performance.now();
+    const delta = Math.min((now - last) / 1000, 0.05);
+    last = now;
 
     for (let i = alive.length - 1; i >= 0; i -= 1) {
       const node = alive[i];
@@ -170,18 +170,18 @@ export function startObjectLayer(canvas) {
   }
 
   resize();
+  last = performance.now();
   window.addEventListener("resize", resize);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       cancelAnimationFrame(frame);
       frame = 0;
     } else if (!frame) {
-      clock.getDelta();
+      last = performance.now();
       step();
     }
   });
 
-  clock.getDelta();
   step();
   load();
 

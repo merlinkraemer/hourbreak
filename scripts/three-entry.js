@@ -1,6 +1,5 @@
 export {
   Box3,
-  Clock,
   DoubleSide,
   Group,
   MeshBasicMaterial,

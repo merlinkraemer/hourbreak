@@ -19,7 +19,7 @@
   --comic: "Comic Sans MS", "Comic Neue", "Chalkboard SE", cursive;
 
   --ink: #d6ffd6;
-  --dim: #5f8f6d;
+  --dim: #7cb08c;
   --accent: #46ff7a;
   --hot: #ff2d95;
   --link: #7fc8ff;
@@ -93,9 +93,19 @@ body {
 .app {
   position: relative;
   margin: auto;
+  isolation: isolate;
   width: 100%;
   max-width: 460px;
   text-align: center;
+}
+
+.app::before {
+  content: "";
+  position: absolute;
+  inset: -56px -46px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse 76% 94% at 50% 50%, rgba(0, 0, 0, .86), rgba(0, 0, 0, .6) 64%, rgba(0, 0, 0, 0) 100%);
 }
 
 .title {
@@ -115,6 +125,7 @@ body {
   letter-spacing: .26em;
   color: var(--dim);
   text-transform: uppercase;
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
 }
 
 .status.hot {
@@ -159,6 +170,7 @@ body {
   font-size: 12px;
   line-height: 2;
   color: var(--dim);
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
 }
 
 .meta {
@@ -169,7 +181,8 @@ body {
   margin: 26px 0 0;
   font-size: 11px;
   letter-spacing: .06em;
-  color: #35604a;
+  color: var(--dim);
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
 }
 
 .meta b { color: var(--accent); }
@@ -183,7 +196,8 @@ body {
   margin: 18px 0 0;
   font-size: 11px;
   letter-spacing: .06em;
-  color: #35604a;
+  color: var(--dim);
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
 }
 
 .options label { display: inline-flex; align-items: center; gap: 6px; }
@@ -208,16 +222,18 @@ input[type="range"] { width: 74px; accent-color: var(--accent); }
 
 .modules summary {
   padding: 5px 8px;
-  color: #35604a;
+  color: var(--dim);
   letter-spacing: .1em;
   text-align: center;
   cursor: pointer;
   border: 2px ridge #2e6b41;
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+
   list-style: none;
 }
 
 .modules summary::-webkit-details-marker { display: none; }
-.modules[open] summary { color: var(--dim); }
+.modules[open] summary { color: var(--ink); }
 
 .modules table {
   width: 100%;
@@ -227,8 +243,10 @@ input[type="range"] { width: 74px; accent-color: var(--accent); }
 
 .modules td {
   padding: 3px 6px;
-  border-bottom: 1px solid #16301f;
-  color: #8fc9a2;
+  border-bottom: 1px solid #1d3f29;
+  color: #9ed4b0;
+  text-shadow: 0 1px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+
 }
 
 .modules td:last-child { text-align: right; width: 1px; }
