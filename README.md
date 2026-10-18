@@ -60,6 +60,11 @@ Click it and it does a kickflip: a 360° flip around the horizontal axis with a 
 eased. Land a second click inside the 620 ms window after it lands and the combo goes up.
 Audio is Web Audio buffers, not `<audio>` elements. Trick sounds are fetched after page load;
 each noise is fetched only once it is picked as the next one, so the page loads no noise files.
+Phones: every tap, click or key resumes the audio context from any non-running state (WebKit
+starts it `interrupted`, not `suspended`), sets `navigator.audioSession` to `playback` so the
+iOS silent switch does not mute it, and loops `sounds/silence.mp3` while active to hold the
+media session. A noise that comes due while the context is not running waits for it instead of
+playing into nothing.
 
 Multiplier labels run x1, x2, x5, x10, x25, x50, x100, x250, x500, x1000. Every combo hit plays
 a Tony Hawk trick sound, banded by combo count:

@@ -80,6 +80,8 @@ let hintTimer = 0;
 let audioContext = null;
 let loudInput = null;
 let trickInput = null;
+let keepAlive = null;
+let primed = false;
 const buffers = new Map();
 
 function heat() {
@@ -172,12 +174,53 @@ function audioGraph() {
   trickInput = audioContext.createGain();
   trickInput.gain.value = TRICK_VOLUME;
   trickInput.connect(audioContext.destination);
+  audioContext.addEventListener("statechange", () => {
+    if (state.running && audioContext.state !== "running") resumeAudio();
+  });
   return audioContext;
 }
 
+function audioReady() {
+  return audioContext !== null && audioContext.state === "running";
+}
+
+function resumeAudio() {
+  if (audioContext && audioContext.state !== "running" && audioContext.state !== "closed") {
+    audioContext.resume().catch(() => {});
+  }
+}
+
 function wakeAudio() {
+  if (navigator.audioSession && navigator.audioSession.type !== "playback") {
+    try {
+      navigator.audioSession.type = "playback";
+    } catch {}
+  }
   const ctx = audioGraph();
-  if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
+  if (!ctx) return;
+  resumeAudio();
+  if (!primed) {
+    primed = true;
+    const source = ctx.createBufferSource();
+    source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    source.connect(ctx.destination);
+    source.start();
+  }
+}
+
+function holdAudioSession(on) {
+  if (!keepAlive) {
+    keepAlive = new Audio("sounds/silence.mp3");
+    keepAlive.loop = true;
+    keepAlive.preload = "auto";
+    keepAlive.setAttribute("playsinline", "");
+  }
+  if (on) {
+    const started = keepAlive.play();
+    if (started && started.catch) started.catch(() => {});
+  } else {
+    keepAlive.pause();
+  }
 }
 
 function loadBuffer(url) {
@@ -403,6 +446,7 @@ function start() {
   el.speaker.hidden = false;
   if (stars) stars.start();
   if (banana) banana.setActive(true);
+  holdAudioSession(true);
   queueClip();
   state.nextAt = Date.now() + (FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random()) * 1000;
 }
@@ -416,6 +460,7 @@ function stop() {
   el.speaker.hidden = true;
   if (stars) stars.stop();
   if (banana) banana.setActive(false);
+  holdAudioSession(false);
   closeChain();
 }
 
@@ -425,11 +470,20 @@ function update() {
     stop();
     return;
   }
-  if (Date.now() >= state.nextAt) fire();
+  if (Date.now() < state.nextAt) return;
+  if (!audioReady()) {
+    resumeAudio();
+    return;
+  }
+  fire();
 }
 
-root.addEventListener("pointerdown", wakeAudio);
-root.addEventListener("touchend", wakeAudio);
+for (const type of ["pointerdown", "pointerup", "touchend", "click", "keydown"]) {
+  root.addEventListener(type, wakeAudio, { capture: true, passive: true });
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") resumeAudio();
+});
 
 el.activate.addEventListener("click", () => {
   if (state.running) {
