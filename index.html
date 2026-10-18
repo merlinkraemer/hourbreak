@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HOURBREAK&trade; &mdash; the #1 productivity increaser</title>
-<meta name="description" content="Keep this tab open to work better. Trusted by 10,000+ serious professionals.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23ffff00'/%3E%3Cpath d='M0 0h16v3H0zM0 13h16v3H0z' fill='%23000'/%3E%3Cpath d='M2 3h12v10H2z' fill='%23ffb300'/%3E%3Cpath d='M4 5h8v1.6H4zM4 8h8v1.6H4z' fill='%23000'/%3E%3C/svg%3E">
+<title>PRODUCTIVITY BOOST X1000</title>
+<meta name="description" content="Leave me running and just do your thing.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='1' y='6' width='14' height='4' fill='%2346ff7a'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/silkscreen-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/silkscreen-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,89 +18,48 @@
   <div class="bg-scrim"></div>
 </div>
 
-<div class="grain" aria-hidden="true"></div>
+<canvas id="objects" aria-hidden="true"></canvas>
 
-<div class="page" id="page">
+<main class="app" id="app">
 
-  <header class="masthead">
-    <div class="wordart-wrap">
-      <svg class="wordart" viewBox="0 0 1000 330" role="img" aria-label="HOURBREAK">
-        <defs>
-          <linearGradient id="waFill" x1="0" y1="0" x2="0.12" y2="1">
-            <stop offset="0" stop-color="#ffffff"/>
-            <stop offset="0.16" stop-color="#fff200"/>
-            <stop offset="0.34" stop-color="#ff8a00"/>
-            <stop offset="0.52" stop-color="#ff0080"/>
-            <stop offset="0.7" stop-color="#7b2bff"/>
-            <stop offset="0.86" stop-color="#00d0ff"/>
-            <stop offset="1" stop-color="#00ff62"/>
-          </linearGradient>
-          <path id="waArc" d="M30,275 Q500,110 970,275" fill="none"/>
-        </defs>
-        <text class="wa-shadow" transform="translate(10,12)" text-anchor="middle" aria-hidden="true">
-          <textPath href="#waArc" startOffset="50%">HOURBREAK</textPath>
-        </text>
-        <text class="wa-text" text-anchor="middle">
-          <textPath href="#waArc" startOffset="50%">HOURBREAK</textPath>
-        </text>
-      </svg>
-    </div>
-    <p class="tagline"><marquee scrollamount="4" scrolldelay="60">KEEP THIS TAB OPEN TO WORK BETTER</marquee></p>
-  </header>
+  <h1 class="title">PRODUCTIVITY BOOST X1000</h1>
 
-  <section class="rig">
-    <div class="lcd">
-      <span class="lcd-label" id="lcd-label">FOCUS</span>
-      <span class="lcd-big" id="clock">00:00</span>
-      <div class="meter" id="meter"><i></i></div>
-    </div>
+  <p class="status" id="status">idle</p>
+  <p class="timer" id="clock">00:00</p>
 
-    <div class="controls">
-      <button id="start" class="bigbtn bigbtn-go">&#9658;&#9658; START</button>
-      <button id="stop" class="bigbtn" disabled>&#9632; STOP</button>
-      <label class="field">INTENSITY <input type="range" id="volume" min="0" max="100" value="85"></label>
-    </div>
+  <button class="activate" id="activate" type="button">activate</button>
 
-    <p class="readout">
-      <span>SESSION LEFT <b id="session-left">60:00</b></span>
-      <span>NEXT SYNC <b id="next">??:??</b></span>
-      <span>OPTIMIZATIONS <b id="optimizations">0</b></span>
-    </p>
+  <p class="hint" id="hint">leave me running and just do your thing my guy! feel your productivity go up instantly!</p>
 
-    <p class="hint" id="hint">PRESS START, THEN LEAVE THIS TAB OPEN AND GO DO SOMETHING ELSE. THAT IS THE ENTIRE METHODOLOGY.</p>
+  <p class="meta">
+    <span>OPTIMIZATIONS <b id="optimizations">0</b></span>
+    <span>SESSION LEFT <b id="session-left">60:00</b></span>
+    <span>NEXT SYNC <b id="next">??:??</b></span>
+  </p>
 
-    <div class="opts">
-      <label class="field">SESSION
-        <select id="length">
-          <option value="3600000" selected>1 HOUR</option>
-          <option value="7200000">2 HOURS</option>
-          <option value="14400000">4 HOURS</option>
-          <option value="28800000">8 HOURS</option>
-          <option value="forever">FOREVER</option>
-        </select>
-      </label>
-      <label class="field"><input type="checkbox" id="cheat"> SHOW SYNC TIMER</label>
-    </div>
-  </section>
+  <div class="options">
+    <label>SESSION
+      <select id="length">
+        <option value="3600000" selected>1 HOUR</option>
+        <option value="7200000">2 HOURS</option>
+        <option value="14400000">4 HOURS</option>
+        <option value="28800000">8 HOURS</option>
+        <option value="forever">FOREVER</option>
+      </select>
+    </label>
+    <label>INTENSITY <input type="range" id="volume" min="0" max="100" value="85"></label>
+    <label><input type="checkbox" id="cheat"> SHOW SYNC TIMER</label>
+  </div>
 
-  <details class="panel" id="spec-panel">
-    <summary><span id="lib-count"></span> MODULES <span class="more">&middot; click to expand</span></summary>
-    <div class="panel-body">
-      <div class="tablewrap">
-        <table class="jukebox" id="jukebox"><tbody></tbody></table>
-      </div>
-    </div>
+  <details class="modules" id="spec-panel">
+    <summary><span id="lib-count"></span> MODULES</summary>
+    <table id="jukebox"><tbody></tbody></table>
   </details>
 
-  <footer class="footer">
-    &copy; 1998&ndash;2026 HOURBREAK INC. &middot;
-    <a href="mailto:webmaster@hourbreak.example?subject=i%20am%20more%20productive%20now">E-MAIL THE WEBMASTER</a>
-  </footer>
-
-</div>
+</main>
 
 <div class="flash" id="flash" aria-hidden="true"><span id="flash-text"></span></div>
 
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
