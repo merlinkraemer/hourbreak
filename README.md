@@ -30,14 +30,24 @@ Four elements, in this order, and they never move:
 1. the title, `BOOST X1000`
 2. the banana bunch, big, rotating, clickable
 3. one red underlined `activate` link (becomes `🔊 deactivate` while running)
-4. the subtext — *leave me running and just do your thing my guy! feel your productivity go up
+4. the subtext — *\*leave me running and just do your thing my guy! feel your productivity go up
    instantly!*
 
-The subtext occupies its space even when it is invisible, and the button is a full-width flex
-box, so activating changes nothing about the layout. Activating only does three things: the
-banana spins ~8× faster, the starfield appears, and the noises start.
+The subtext fades in on activate and out again after 4 s. It occupies its space even when it is
+invisible, and the button is a full-width flex box, so activating changes nothing about the
+layout. Activating only does three things: the banana spins ~8× faster, the starfield appears,
+and the noises start.
 
-There is no timer, no status line, no counter, no options.
+On portrait phones the title sits at the top, the button and subtext at the bottom, and a
+slightly bigger banana fills the middle.
+
+The only number on screen is a small `best x…` in the bottom right: the highest combo since the
+page loaded. It is not saved.
+
+Each background is stretched to a random width and height (100–190 % × 100–170 %) at a random
+position, on an element oversized by 20 % per side so the chaos shake never shows an edge.
+
+There is no timer, no status line, no options.
 
 ## The banana
 

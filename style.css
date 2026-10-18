@@ -36,11 +36,11 @@ body {
 
 .bg {
   position: fixed;
-  inset: -2%;
+  inset: -20%;
   z-index: -4;
   background-color: #000;
   background-position: center;
-  background-size: 118% 104%;
+  background-size: 130% 115%;
   background-repeat: no-repeat;
   will-change: transform;
 }
@@ -254,7 +254,7 @@ html.chaos .party {
   line-height: 1.1;
 }
 
-.app.live .hint { visibility: visible; }
+.app.hint-on .hint { opacity: 1; transition: none; }
 
 .speaker { margin-right: .18em; text-decoration: none; }
 
@@ -290,7 +290,22 @@ html.chaos .party {
   font-size: clamp(16px, min(3.6vw, 4.8vh), 62px);
   line-height: 1.35;
   color: var(--green);
-  visibility: hidden;
+  opacity: 0;
+  transition: opacity .8s;
+}
+
+.best {
+  position: fixed;
+  right: 14px;
+  bottom: 10px;
+  z-index: 58;
+  font-family: var(--comic);
+  font-weight: 700;
+  font-size: clamp(13px, 1.6vw, 18px);
+  line-height: 1;
+  color: var(--yellow);
+  text-shadow: 2px 2px 0 #000;
+  pointer-events: none;
 }
 
 .flash {
@@ -326,4 +341,28 @@ html.chaos .party {
 
 @media (max-width: 420px) {
   body { padding: 2vh 16px; }
+}
+
+@media (max-width: 700px) and (orientation: portrait) {
+  body {
+    height: 100dvh;
+    padding-bottom: calc(3vh + env(safe-area-inset-bottom));
+  }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0 auto;
+  }
+
+  .banana-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .banana { height: clamp(150px, min(40vh, 66vw), 420px); }
+
+  .activate { margin-top: 0; }
 }

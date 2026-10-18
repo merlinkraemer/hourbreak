@@ -16,6 +16,7 @@ const el = {
   strobe: $("strobe"),
   title: $("title"),
   hint: $("hint"),
+  best: $("best"),
   speaker: $("speaker"),
   activateLabel: $("activate-label"),
   activate: $("activate"),
@@ -25,6 +26,7 @@ const el = {
 
 const SESSION_MS = 3600000;
 const BACKGROUND_MS = 30000;
+const HINT_MS = 4000;
 const TRICK_VOLUME = 0.85;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
@@ -58,6 +60,7 @@ const state = {
   endsAt: 0,
   nextAt: 0,
   chain: 0,
+  best: 0,
   windowFrom: 0,
   windowTo: 0,
   attemptLive: false,
@@ -73,6 +76,7 @@ const banana = startBanana(el.banana, { onLanded: handleLanded });
 let missTimer = 0;
 let comboHideTimer = 0;
 let chaosTimer = 0;
+let hintTimer = 0;
 let audioContext = null;
 let loudInput = null;
 let trickInput = null;
@@ -137,6 +141,8 @@ function nextBackground() {
   while (index === state.bgIndex) index = Math.floor(Math.random() * state.backgrounds.length);
   state.bgIndex = index;
   el.bg.style.backgroundImage = 'url("thumbs/' + state.backgrounds[index].file + '")';
+  el.bg.style.backgroundSize = Math.round(100 + Math.random() * 90) + "% " + Math.round(100 + Math.random() * 70) + "%";
+  el.bg.style.backgroundPosition = Math.round(Math.random() * 100) + "% " + Math.round(Math.random() * 100) + "%";
 }
 
 function clipCurve() {
@@ -364,6 +370,11 @@ function hit() {
     state.attemptLive = true;
     clearTimeout(missTimer);
     showCombo(state.chain);
+    if (state.chain > state.best) {
+      state.best = state.chain;
+      el.best.textContent = "best " + comboLabel(state.best);
+      el.best.hidden = false;
+    }
     playComboTrick(state.chain);
     goCrazy(state.chain);
     if (banana.isFlipping()) state.queued = true;
@@ -385,7 +396,9 @@ function start() {
   state.startedAt = Date.now();
   state.endsAt = state.startedAt + SESSION_MS;
   state.recent = [];
-  el.app.classList.add("live");
+  el.app.classList.add("live", "hint-on");
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => el.app.classList.remove("hint-on"), HINT_MS);
   el.activateLabel.textContent = "deactivate";
   el.speaker.hidden = false;
   if (stars) stars.start();
@@ -397,7 +410,8 @@ function start() {
 function stop() {
   if (!state.running) return;
   state.running = false;
-  el.app.classList.remove("live");
+  clearTimeout(hintTimer);
+  el.app.classList.remove("live", "hint-on");
   el.activateLabel.textContent = "activate";
   el.speaker.hidden = true;
   if (stars) stars.stop();
