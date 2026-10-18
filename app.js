@@ -474,6 +474,7 @@
       if (el.cheat.checked) {
         logLine("e", "> sync timer revealed. u are now watching the clock instead of working.");
       } else {
+        el.next.textContent = state.running ? "??:??" : "--:--";
         logLine("s", "   .. sync timer hidden. mystery restored ..");
       }
     });
