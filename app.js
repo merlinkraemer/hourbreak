@@ -187,7 +187,7 @@
     state.running = true;
     state.startedAt = Date.now();
     state.endsAt = state.forever ? Infinity : state.startedAt + span;
-    state.lastAt = 0;
+    state.lastAt = state.startedAt;
     state.optimizations = 0;
     state.recent = [];
     state.lastClock = "";
@@ -240,7 +240,7 @@
       }
     }
 
-    const since = state.running ? (state.lastAt || state.startedAt) : 0;
+    const since = state.running ? state.lastAt : 0;
     if (since) {
       const clock = mmss(now - since);
       if (clock !== state.lastClock) {
@@ -346,7 +346,9 @@
       const img = new Image();
       img.src = "thumbs/" + item.file;
     }
-    showBackground(false);
+    state.bgIndex = 0;
+    state.bgFront = "b";
+    showBackground();
     setInterval(showBackground, BACKGROUND_MS);
   }
 

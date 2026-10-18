@@ -70,6 +70,21 @@ the listed length, fades, normalizes to −15 LUFS, hard-limits at −1 dBFS, an
 
 To add a module: append a row to `scripts/sounds.tsv`, run the script, reload.
 
+## The backdrops
+
+15 YouTube thumbnails from the `1 hour of silence broken by` search, as fullscreen
+cross-fading backgrounds. One image every 20 s with a 2.2 s fade and a slow ken-burns drift,
+and the backdrop also advances immediately every time a module fires.
+
+```sh
+bash scripts/fetch-thumbs.sh                     # default query, 15 results
+bash scripts/fetch-thumbs.sh "some query" 20
+```
+
+Tries `maxresdefault`, falls back to `hqdefault` then `mqdefault` when YouTube has no
+high-res frame, crops to 1024x576, re-encodes to JPEG q5, and writes `thumbs/manifest.json`.
+Thumbs already on disk are skipped. 15 thumbnails = 376 KB.
+
 ## Deploy
 
 Static. `vercel.json` is set up for a plain static deploy with long cache headers on

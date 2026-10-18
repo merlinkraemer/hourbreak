@@ -69,11 +69,11 @@ a:hover { color: var(--link-hot); background: #330033; }
   background-position: center;
   background-repeat: no-repeat;
   transition: opacity 2.2s linear;
-  filter: saturate(1.75) contrast(1.22) brightness(.78) blur(1px);
+  filter: saturate(1.7) contrast(1.15) brightness(.68) blur(1px);
 }
 
 .bg-layer.on {
-  opacity: .46;
+  opacity: .9;
   animation: kenburns 26s ease-in-out forwards;
 }
 
@@ -86,8 +86,8 @@ a:hover { color: var(--link-hot); background: #330033; }
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 60% at 50% 38%, rgba(0, 0, 18, .34), rgba(0, 0, 12, .84) 78%),
-    linear-gradient(rgba(0, 0, 14, .5), rgba(0, 0, 14, .5));
+    radial-gradient(ellipse 62% 52% at 50% 34%, rgba(0, 0, 20, .55), rgba(0, 0, 12, .16) 72%),
+    linear-gradient(rgba(0, 0, 10, .26), rgba(0, 0, 10, .48));
 }
 
 .grain {
@@ -408,5 +408,5 @@ select {
   .wordart-wrap { max-width: 300px; }
   .wordart text { font-size: 168px; }
   .readout { gap: 3px 12px; }
-  .bg-layer.on { opacity: .34; }
+  .bg-layer.on { opacity: .82; }
 }
