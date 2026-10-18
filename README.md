@@ -77,13 +77,13 @@ a Tony Hawk trick sound, banded by combo count:
 | 16–20 | `combo-3` |
 | … | `combo-4` … `combo-7` |
 
-`enter.mp3` is not a Tony Hawk sound: it is `gutsus-shop-section-enter.wav`, the opener sting.
-It never replaces anything: it is layered over the band sound on every hit — the opener and
-combos 1–5 on top of `special-trick`, combos 6+ on top of `combo-1` … `combo-7`. Every play is
-detuned by a random ±5 cents on top of its rate (the opener copy runs at `OPENER_RATE` to match
-the trick under it), and the layer runs at `ENTER_VOLUME` (0.6) through its own gain node so it
-never stops the band sound. It is not in `manifest.json`: the manifest drives the combo bands,
-and an extra entry would shift them.
+`enter.mp3` is not a Tony Hawk sound: it is `gutsus-shop-section-enter.wav`, the opener sting. It
+is the only sound on the first tap of a chain — no trick sound under it, at `OPENER_RATE` (0.85)
+through the trick gain. Every combo hit after that plays the band sound *and* the sting layered
+on top: combos 1–5 are `special-trick`, 6+ are `combo-1` … `combo-7`. Every play is detuned by a
+random ±5 cents on top of its rate, and the layer runs at `ENTER_VOLUME` (0.6) through its own
+gain node so it never stops the band sound. It is not in `manifest.json`: the manifest drives
+the combo bands, and an extra entry would shift them.
 
 ```sh
 bash scripts/build-banana.sh                 # default model, reads HB_BANANA_ZIP

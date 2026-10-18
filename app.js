@@ -314,13 +314,17 @@ function centShift() {
   return Math.pow(2, ((Math.random() * 2 - 1) * ENTER_CENTS) / 1200);
 }
 
+function stopTrick() {
+  if (!state.trickSource) return;
+  try {
+    state.trickSource.stop();
+  } catch {}
+  state.trickSource = null;
+}
+
 function playTrick(file, rate) {
   if (!audioContext) return;
-  if (state.trickSource) {
-    try {
-      state.trickSource.stop();
-    } catch {}
-  }
+  stopTrick();
   playBuffer("tricks/" + file, trickInput, rate)
     .then((source) => {
       state.trickSource = source;
@@ -328,9 +332,9 @@ function playTrick(file, rate) {
     .catch(() => {});
 }
 
-function playEnterLayer(rate) {
+function playEnterLayer(rate, input) {
   if (!audioContext) return;
-  playBuffer("tricks/" + ENTER_FILE, enterInput, (rate || 1) * centShift()).catch(() => {});
+  playBuffer("tricks/" + ENTER_FILE, input || enterInput, (rate || 1) * centShift()).catch(() => {});
 }
 
 function playComboTrick(count) {
@@ -448,10 +452,8 @@ function hit() {
     return;
   }
 
-  if (state.tricks.length) {
-    playTrick(state.tricks[0].file, OPENER_RATE);
-    playEnterLayer(OPENER_RATE);
-  }
+  stopTrick();
+  playEnterLayer(OPENER_RATE, trickInput);
   launch(now, 0);
 }
 
