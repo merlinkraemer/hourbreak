@@ -18,15 +18,16 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  overflow-x: clip;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
+  height: 100%;
   display: flex;
-  padding: 20px 20px 24px;
-  overflow-x: clip;
+  padding: 2.2vh 20px;
+  overflow: hidden;
   background: #000;
   font-family: var(--comic);
   font-size: 20px;
@@ -39,7 +40,7 @@ body {
   z-index: -4;
   background-color: #000;
   background-position: center;
-  background-size: cover;
+  background-size: 118% 104%;
   background-repeat: no-repeat;
 }
 
@@ -76,7 +77,7 @@ body {
   --level: 1;
   --hue: 60;
   --pop: 1.15;
-  font-size: calc(clamp(32px, 6vw, 78px) * (1 + (var(--level) - 1) * 0.05));
+  font-size: calc(clamp(26px, min(6vw, 8vh), 78px) * (1 + (var(--level) - 1) * 0.05));
   line-height: 1;
   letter-spacing: calc((var(--level) - 1) * 0.012em);
   color: hsl(var(--hue) 100% 60%);
@@ -104,7 +105,7 @@ body {
 .banana {
   display: block;
   width: 100%;
-  height: clamp(170px, 30vh, 400px);
+  height: clamp(110px, min(30vh, 46vw), 400px);
   margin: 0 auto;
   cursor: pointer;
   touch-action: manipulation;
@@ -235,12 +236,12 @@ html.chaos .app {
 }
 
 .title {
-  margin: 0 0 1.4vw;
+  margin: 0 0 min(1.4vw, 2vh);
   white-space: pre-wrap;
   color: var(--blue);
   font-family: var(--comic);
   font-weight: 700;
-  font-size: clamp(44px, 11vw, 148px);
+  font-size: clamp(28px, min(10.5vw, 15vh), 148px);
   line-height: 1.1;
 }
 
@@ -254,10 +255,10 @@ html.chaos .app {
   justify-content: center;
   width: 100%;
   gap: .12em;
-  margin: 3vw 0 0;
+  margin: min(3vw, 4vh) 0 0;
   padding: 0;
   font-family: var(--comic);
-  font-size: clamp(46px, 11vw, 152px);
+  font-size: clamp(26px, min(11vw, 13vh), 152px);
   font-weight: 700;
   line-height: 1.35;
   color: var(--red);
@@ -275,9 +276,9 @@ html.chaos .app {
 .activate:active { color: #ff6b6b; }
 
 .hint {
-  margin: 2.4vw auto 0;
+  margin: min(2.4vw, 3vh) auto 0;
   max-width: 22em;
-  font-size: clamp(28px, 3.6vw, 62px);
+  font-size: clamp(16px, min(3.6vw, 4.8vh), 62px);
   line-height: 1.35;
   color: var(--green);
   visibility: hidden;
@@ -315,5 +316,5 @@ html.chaos .app {
 }
 
 @media (max-width: 420px) {
-  body { padding: 24px 16px 36px; }
+  body { padding: 2vh 16px; }
 }
