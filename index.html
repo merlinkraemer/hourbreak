@@ -3,60 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PRODUCTIVITY BOOST X1000</title>
+<title>BOOST X1000</title>
 <meta name="description" content="Leave me running and just do your thing.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23000'/%3E%3Crect x='1' y='6' width='14' height='4' fill='%2346ff7a'/%3E%3C/svg%3E">
-<link rel="preload" href="fonts/silkscreen-400.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/silkscreen-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A2%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<div class="bg" aria-hidden="true">
-  <div class="bg-layer" id="bg-a"></div>
-  <div class="bg-layer" id="bg-b"></div>
-  <div class="bg-scrim"></div>
-</div>
+<div class="bg" id="bg" aria-hidden="true"></div>
+
+<canvas class="stars" id="stars" aria-hidden="true"></canvas>
 
 <canvas id="objects" aria-hidden="true"></canvas>
 
-<div class="shade" aria-hidden="true"></div>
-
 <main class="app" id="app">
 
-  <h1 class="title">PRODUCTIVITY BOOST X1000</h1>
+  <h1 class="title" id="title">BOOST X1000</h1>
 
-  <p class="status" id="status">idle</p>
-  <p class="timer" id="clock">00:00</p>
+  <div class="seven" id="clock" hidden aria-label="session timer"></div>
 
   <button class="activate" id="activate" type="button">activate</button>
 
-  <p class="hint" id="hint">leave me running and just do your thing my guy! feel your productivity go up instantly!</p>
-
-  <p class="meta">
-    <span>OPTIMIZATIONS <b id="optimizations">0</b></span>
-    <span>SESSION LEFT <b id="session-left">60:00</b></span>
-    <span>NEXT SYNC <b id="next">??:??</b></span>
-  </p>
-
-  <div class="options">
-    <label>SESSION
-      <select id="length">
-        <option value="3600000" selected>1 HOUR</option>
-        <option value="7200000">2 HOURS</option>
-        <option value="14400000">4 HOURS</option>
-        <option value="28800000">8 HOURS</option>
-        <option value="forever">FOREVER</option>
-      </select>
-    </label>
-    <label>INTENSITY <input type="range" id="volume" min="0" max="100" value="85"></label>
-    <label><input type="checkbox" id="cheat"> SHOW SYNC TIMER</label>
-  </div>
-
-  <details class="modules" id="spec-panel">
-    <summary><span id="lib-count"></span> MODULES</summary>
-    <table id="jukebox"><tbody></tbody></table>
-  </details>
+  <p class="hint" id="hint" hidden>leave me running and just do your thing my guy! feel your productivity go up instantly!</p>
 
 </main>
 

@@ -3,6 +3,7 @@ export {
   DoubleSide,
   Group,
   MeshBasicMaterial,
+  NearestFilter,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,

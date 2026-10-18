@@ -1,29 +1,25 @@
 import { startObjectLayer } from "./objects.js";
+import { startStarfield } from "./stars.js";
+import { createSeven } from "./seven.js";
 
 const $ = (id) => document.getElementById(id);
 
 const el = {
-  app: $("app"),
-  bgA: $("bg-a"),
-  bgB: $("bg-b"),
+  bg: $("bg"),
+  stars: $("stars"),
   objects: $("objects"),
-  status: $("status"),
+  title: $("title"),
   clock: $("clock"),
-  sessionLeft: $("session-left"),
-  next: $("next"),
-  optimizations: $("optimizations"),
+  hint: $("hint"),
   activate: $("activate"),
-  length: $("length"),
-  volume: $("volume"),
-  cheat: $("cheat"),
-  jukebox: $("jukebox").tBodies[0],
-  libCount: $("lib-count"),
   flash: $("flash"),
   flashText: $("flash-text"),
 };
 
+const SESSION_MS = 3600000;
+const BACKGROUND_MS = 180000;
+const VOLUME = 0.85;
 const MIN_GAP_MIN = 30;
-const BACKGROUND_MS = 20000;
 
 const GAP_BUCKETS = [
   { weight: 55, min: 30, max: 45 },
@@ -31,7 +27,7 @@ const GAP_BUCKETS = [
   { weight: 15, min: 80, max: 150 },
 ];
 
-const FIRST_GAP = { min: 8, max: 50 };
+const FIRST_GAP = { min: 300, max: 480 };
 const BURST_CHANCE = 0.09;
 
 const state = {
@@ -39,20 +35,15 @@ const state = {
   audio: new Map(),
   backgrounds: [],
   bgIndex: 0,
-  bgFront: "a",
   recent: [],
   running: false,
   startedAt: 0,
   endsAt: 0,
-  forever: false,
   nextAt: 0,
-  lastAt: 0,
-  optimizations: 0,
-  volume: 0.85,
 };
 
-let endTimer = 0;
-let lastClock = "";
+const seven = createSeven(el.clock, "00:00");
+const stars = startStarfield(el.stars);
 
 const pad = (n, w) => String(n).padStart(w, "0");
 
@@ -61,28 +52,9 @@ function mmss(ms) {
   return pad(Math.floor(s / 60), 2) + ":" + pad(s % 60, 2);
 }
 
-function spoken(ms) {
-  const minutes = Math.round(ms / 60000);
-  if (minutes < 60) return minutes + " MINUTE" + (minutes === 1 ? "" : "S");
-  const hours = minutes / 60;
-  return (Number.isInteger(hours) ? hours : hours.toFixed(1)) + " HOUR" + (hours === 1 ? "" : "S");
-}
-
-function setStatus(text, hot) {
-  el.status.textContent = text;
-  el.status.classList.toggle("hot", Boolean(hot));
-}
-
-function showBackground() {
+function nextBackground() {
   if (!state.backgrounds.length) return;
-  const incoming = state.bgFront === "a" ? el.bgB : el.bgA;
-  const outgoing = state.bgFront === "a" ? el.bgA : el.bgB;
-  incoming.style.backgroundImage = 'url("thumbs/' + state.backgrounds[state.bgIndex].file + '")';
-  incoming.classList.remove("on");
-  void incoming.offsetWidth;
-  incoming.classList.add("on");
-  outgoing.classList.remove("on");
-  state.bgFront = state.bgFront === "a" ? "b" : "a";
+  el.bg.style.backgroundImage = 'url("thumbs/' + state.backgrounds[state.bgIndex].file + '")';
   state.bgIndex = (state.bgIndex + 1) % state.backgrounds.length;
 }
 
@@ -106,22 +78,10 @@ function audioFor(clip) {
   if (!node) {
     node = new Audio("sounds/" + clip.file);
     node.preload = "auto";
-    node.volume = state.volume;
+    node.volume = VOLUME;
     state.audio.set(clip.file, node);
   }
   return node;
-}
-
-function announce(clip) {
-  el.flashText.textContent = clip.label;
-  el.flash.classList.remove("on");
-  void el.flash.offsetWidth;
-  el.flash.classList.add("on");
-  el.app.classList.remove("shake");
-  void el.app.offsetWidth;
-  el.app.classList.add("shake");
-  setTimeout(() => el.app.classList.remove("shake"), 500);
-  setTimeout(() => el.flash.classList.remove("on"), 1900);
 }
 
 function playClip(clip) {
@@ -129,26 +89,19 @@ function playClip(clip) {
   try {
     node.currentTime = 0;
   } catch {}
-  node.volume = state.volume;
   const started = node.play();
-  if (started && started.catch) {
-    started.catch(() => setStatus("click the page first, then try again", true));
-  }
+  if (started && started.catch) started.catch(() => {});
 
   state.recent.push(clip.file);
   if (state.recent.length > 6) state.recent.shift();
-  state.lastAt = Date.now();
 
-  announce(clip);
-  showBackground();
+  el.flashText.textContent = clip.label;
+  el.flash.classList.remove("on");
+  void el.flash.offsetWidth;
+  el.flash.classList.add("on");
+  setTimeout(() => el.flash.classList.remove("on"), 1900);
 
-  if (state.running) {
-    setStatus(clip.label, true);
-    state.optimizations += 1;
-    el.optimizations.textContent = state.optimizations;
-    clearTimeout(endTimer);
-    endTimer = setTimeout(() => setStatus("running", false), clip.seconds * 1000 + 150);
-  }
+  nextBackground();
 }
 
 function fire() {
@@ -162,81 +115,43 @@ function fire() {
 }
 
 function start() {
-  if (!state.clips.length) return;
-  const value = el.length.value;
-  state.forever = value === "forever";
-  const span = state.forever ? 0 : Number(value);
-
+  if (!state.clips.length || state.running) return;
   state.running = true;
   state.startedAt = Date.now();
-  state.endsAt = state.forever ? Infinity : state.startedAt + span;
-  state.lastAt = state.startedAt;
-  state.optimizations = 0;
+  state.endsAt = state.startedAt + SESSION_MS;
   state.recent = [];
 
-  el.optimizations.textContent = "0";
-  el.clock.textContent = "00:00";
-  lastClock = "";
-  setStatus(state.forever ? "running forever" : "running for " + spoken(span), false);
+  seven.set("00:00");
+  el.title.hidden = true;
+  el.clock.hidden = false;
+  el.hint.hidden = false;
   el.activate.textContent = "deactivate";
-  el.activate.classList.add("on");
+  if (stars) stars.start();
 
-  state.nextAt = Date.now() + (FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random()) * 1000;
-  if (!el.cheat.checked) el.next.textContent = "??:??";
+  const first = FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random();
+  state.nextAt = Date.now() + first * 1000;
 }
 
-function stop(timeUp) {
+function stop() {
   if (!state.running) return;
   state.running = false;
+  el.title.hidden = false;
+  el.clock.hidden = true;
+  el.hint.hidden = true;
   el.activate.textContent = "activate";
-  el.activate.classList.remove("on");
-  setStatus(timeUp
-    ? "session complete \u2014 " + state.optimizations + " optimizations"
-    : "paused", false);
-  el.next.textContent = "--:--";
-  document.title = "PRODUCTIVITY BOOST X1000";
+  if (stars) stars.stop();
 }
 
 function update() {
+  if (!state.running) return;
   const now = Date.now();
-
-  if (state.running) {
-    if (!state.forever && now >= state.endsAt) {
-      stop(true);
-    } else {
-      if (now >= state.nextAt) fire();
-
-      const left = state.forever ? now - state.startedAt : state.endsAt - now;
-      el.sessionLeft.textContent = (state.forever ? "\u221e " : "") + mmss(left);
-
-      const clock = mmss(now - state.lastAt);
-      if (clock !== lastClock) {
-        lastClock = clock;
-        el.clock.textContent = clock;
-        document.title = "\u25b8 " + clock + " \u2014 PRODUCTIVITY BOOST X1000";
-      }
-
-      if (el.cheat.checked) el.next.textContent = mmss(Math.max(0, state.nextAt - now));
-    }
+  if (now >= state.endsAt) {
+    seven.set(mmss(SESSION_MS));
+    stop();
+    return;
   }
-}
-
-function buildJukebox() {
-  el.jukebox.textContent = "";
-  for (const clip of state.clips) {
-    const row = document.createElement("tr");
-    const name = document.createElement("td");
-    name.textContent = clip.label;
-    const cell = document.createElement("td");
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "PREVIEW";
-    button.addEventListener("click", () => playClip(clip));
-    cell.append(button);
-    row.append(name, cell);
-    el.jukebox.append(row);
-  }
-  el.libCount.textContent = state.clips.length;
+  if (now >= state.nextAt) fire();
+  seven.set(mmss(now - state.startedAt));
 }
 
 let audioUnlocked = false;
@@ -251,9 +166,9 @@ function unlock() {
       started.then(() => {
         node.pause();
         node.currentTime = 0;
-        node.volume = state.volume;
+        node.volume = VOLUME;
       }).catch(() => {
-        node.volume = state.volume;
+        node.volume = VOLUME;
       });
     }
   }
@@ -261,36 +176,21 @@ function unlock() {
 
 el.activate.addEventListener("click", () => {
   if (state.running) {
-    stop(false);
+    stop();
   } else {
     unlock();
     start();
   }
 });
 
-el.length.addEventListener("change", () => {
-  if (state.running) stop(false);
-});
-
-el.volume.addEventListener("input", () => {
-  state.volume = Number(el.volume.value) / 100;
-  for (const node of state.audio.values()) node.volume = state.volume;
-});
-
-el.cheat.addEventListener("change", () => {
-  if (state.running) el.next.textContent = el.cheat.checked ? mmss(Math.max(0, state.nextAt - Date.now())) : "??:??";
-});
-
 async function loadSounds() {
   try {
     const response = await fetch("sounds/manifest.json", { cache: "no-cache" });
-    if (!response.ok) throw new Error("HTTP " + response.status);
+    if (!response.ok) return;
     state.clips = await response.json();
-  } catch (error) {
-    setStatus("sounds/manifest.json: " + error.message, true);
+  } catch {
     return;
   }
-  buildJukebox();
   for (const clip of state.clips) audioFor(clip);
   setInterval(update, 200);
 }
@@ -304,12 +204,8 @@ async function loadBackgrounds() {
     return;
   }
   if (!state.backgrounds.length) return;
-  for (const item of state.backgrounds) {
-    const img = new Image();
-    img.src = "thumbs/" + item.file;
-  }
-  showBackground();
-  setInterval(showBackground, BACKGROUND_MS);
+  nextBackground();
+  setInterval(nextBackground, BACKGROUND_MS);
 }
 
 startObjectLayer(el.objects);

@@ -4,6 +4,7 @@ import {
   GLTFLoader,
   Group,
   MeshBasicMaterial,
+  NearestFilter,
   PerspectiveCamera,
   SRGBColorSpace,
   Scene,
@@ -13,9 +14,10 @@ import {
 
 const FOV = 42;
 const CAMERA_Z = 6;
-const MAX_ALIVE = 3;
-const SPAWN_GAP = [2600, 7600];
-const CROSS_SECONDS = [11, 23];
+const RESOLUTION = 4;
+const MAX_ALIVE = 1;
+const SPAWN_GAP = [60000, 180000];
+const CROSS_SECONDS = [16, 28];
 const LOADERS = 6;
 
 export function startObjectLayer(canvas) {
@@ -27,12 +29,13 @@ export function startObjectLayer(canvas) {
 
   let renderer;
   try {
-    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
+    renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "low-power" });
   } catch {
     canvas.remove();
     return null;
   }
 
+  renderer.setPixelRatio(1);
   renderer.setClearAlpha(0);
   renderer.outputColorSpace = SRGBColorSpace;
 
@@ -40,19 +43,18 @@ export function startObjectLayer(canvas) {
   const camera = new PerspectiveCamera(FOV, 1, 0.1, 60);
   camera.position.z = CAMERA_Z;
 
-  let last = performance.now();
   const prototypes = [];
   const alive = [];
   let halfWidth = 4;
   let halfHeight = 2.6;
   let nextSpawnAt = 0;
+  let last = performance.now();
   let frame = 0;
 
   function resize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(width, height, false);
+    renderer.setSize(Math.max(2, Math.round(width / RESOLUTION)), Math.max(2, Math.round(height / RESOLUTION)), false);
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     halfHeight = Math.tan((FOV * Math.PI) / 360) * CAMERA_Z;
@@ -64,7 +66,12 @@ export function startObjectLayer(canvas) {
       if (!child.isMesh) return;
       const source = child.material;
       const map = source && source.map ? source.map : null;
-      if (map) map.colorSpace = SRGBColorSpace;
+      if (map) {
+        map.colorSpace = SRGBColorSpace;
+        map.magFilter = NearestFilter;
+        map.minFilter = NearestFilter;
+        map.generateMipmaps = false;
+      }
       child.material = new MeshBasicMaterial({ map, side: DoubleSide });
     });
 
@@ -87,27 +94,20 @@ export function startObjectLayer(canvas) {
     const node = source.clone(true);
     node.scale.setScalar((0.3 + Math.random() * 0.5) / source.userData.radius);
 
-    const fromLeft = Math.random() < 0.5;
+    const reach = Math.hypot(halfWidth, halfHeight) + 2;
+    const from = Math.random() * Math.PI * 2;
+    const heading = from + Math.PI + (Math.random() - 0.5) * 0.5;
     const seconds = CROSS_SECONDS[0] + Math.random() * (CROSS_SECONDS[1] - CROSS_SECONDS[0]);
-    const span = halfWidth * 2 + 3.4;
+    const speed = (reach * 2) / seconds;
 
-    node.position.set(
-      (fromLeft ? -1 : 1) * (halfWidth + 1.7),
-      (Math.random() * 1.7 - 0.85) * halfHeight,
-      (Math.random() - 0.5) * 1.6
-    );
-    node.rotation.set(Math.random() * 6.283, Math.random() * 6.283, Math.random() * 6.283);
+    node.position.set(Math.cos(from) * reach, Math.sin(from) * reach, (Math.random() - 0.5) * 1.4);
+    node.rotation.set(0, Math.random() * Math.PI * 2, 0);
 
     node.userData.move = {
-      vx: (fromLeft ? 1 : -1) * (span / seconds),
-      vy: ((Math.random() - 0.5) * halfHeight * 0.8) / seconds,
-      vz: ((Math.random() - 0.5) * 0.6) / seconds,
-      spin: new Vector3(
-        (Math.random() - 0.5) * 3.4,
-        (Math.random() - 0.5) * 3.4,
-        (Math.random() - 0.5) * 3.4
-      ),
-      exitX: (fromLeft ? 1 : -1) * (halfWidth + 2.6),
+      vx: Math.cos(heading) * speed,
+      vy: Math.sin(heading) * speed,
+      spin: (Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 1.8),
+      exitAt: (reach + 2) ** 2,
     };
 
     scene.add(node);
@@ -124,12 +124,10 @@ export function startObjectLayer(canvas) {
       const move = node.userData.move;
       node.position.x += move.vx * delta;
       node.position.y += move.vy * delta;
-      node.position.z += move.vz * delta;
-      node.rotation.x += move.spin.x * delta;
-      node.rotation.y += move.spin.y * delta;
-      node.rotation.z += move.spin.z * delta;
+      node.rotation.y += move.spin * delta;
 
-      if (move.exitX > 0 ? node.position.x >= move.exitX : node.position.x <= move.exitX) {
+      const { x, y } = node.position;
+      if (x * x + y * y > move.exitAt) {
         scene.remove(node);
         alive.splice(i, 1);
       }

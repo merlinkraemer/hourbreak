@@ -22,10 +22,13 @@ while IFS=$'\t' read -r slug vid label maxlen; do
     echo "fetch  $slug <- https://youtu.be/$vid"
     ok=0
     for attempt in 1 2 3; do
-      if yt-dlp --no-warnings --no-update --quiet --no-part -f bestaudio -o - "https://youtu.be/$vid" 2>"$TMP/$slug.err" \
+      set +o pipefail
+      yt-dlp --no-warnings --no-update --quiet --no-part -f bestaudio -o - "https://youtu.be/$vid" 2>"$TMP/$slug.err" \
         | ffmpeg -hide_banner -loglevel error -y -i pipe:0 -vn \
             -af "silenceremove=start_periods=1:start_silence=0.02:start_threshold=-45dB,apad,atrim=0:${maxlen},asetpts=N/SR/TB,afade=t=in:st=0:d=0.004,afade=t=out:st=$(awk -v m="$maxlen" 'BEGIN{printf "%.3f", m-0.09}'):d=0.09,loudnorm=I=-15:TP=-1.5:LRA=9,alimiter=limit=-1.0dB:level=disabled" \
-            -ac 1 -ar 32000 -b:a 64k -codec:a libmp3lame "$dest" && [[ -s "$dest" ]]; then
+            -ac 1 -ar 32000 -b:a 64k -codec:a libmp3lame "$dest" || true
+      set -o pipefail
+      if [[ -s "$dest" ]] && [[ "$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$dest" 2>/dev/null || echo 0)" != "0" ]]; then
         ok=1
         break
       fi
