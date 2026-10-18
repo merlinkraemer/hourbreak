@@ -1,3 +1,9 @@
+<p align="center"><img src="favicon.png" alt="the banana" width="320"></p>
+
+classic tool to boost your productivity x1000 - click activate, turn up your volume and just get to work my guy
+
+**Live:** https://1hourofsilenceoccasionallybrokenupby.vercel.app
+
 # hourbreak
 
 A productivity app.
