@@ -1,25 +1,29 @@
-import { startObjectLayer } from "./objects.js";
+import { startBanana } from "./banana.js";
 import { startStarfield } from "./stars.js";
-import { createSeven } from "./seven.js";
 
 const $ = (id) => document.getElementById(id);
 
 const el = {
+  app: $("app"),
   bg: $("bg"),
   stars: $("stars"),
-  objects: $("objects"),
+  banana: $("banana"),
+  combo: $("combo"),
   title: $("title"),
-  clock: $("clock"),
   hint: $("hint"),
+  speaker: $("speaker"),
+  activateLabel: $("activate-label"),
   activate: $("activate"),
   flash: $("flash"),
   flashText: $("flash-text"),
 };
 
 const SESSION_MS = 3600000;
-const BACKGROUND_MS = 180000;
+const BACKGROUND_MS = 30000;
 const VOLUME = 0.85;
 const MIN_GAP_MIN = 30;
+const COMBO_WINDOW_MS = 620;
+const COMBO_LABELS = ["x1", "x2", "x5", "x10", "x25", "x50", "x100", "x250", "x500", "x1000"];
 
 const GAP_BUCKETS = [
   { weight: 55, min: 30, max: 45 },
@@ -32,30 +36,30 @@ const BURST_CHANCE = 0.09;
 
 const state = {
   clips: [],
+  tricks: [],
   audio: new Map(),
+  trickAudio: new Map(),
   backgrounds: [],
-  bgIndex: 0,
+  bgIndex: -1,
   recent: [],
   running: false,
   startedAt: 0,
   endsAt: 0,
   nextAt: 0,
+  combo: 0,
+  comboOpenUntil: 0,
 };
 
-const seven = createSeven(el.clock, "00:00");
 const stars = startStarfield(el.stars);
+const banana = startBanana(el.banana, { onLanded: openComboWindow });
 
-const pad = (n, w) => String(n).padStart(w, "0");
+let comboHideTimer = 0;
 
-function mmss(ms) {
-  const s = Math.max(0, Math.round(ms / 1000));
-  return pad(Math.floor(s / 60), 2) + ":" + pad(s % 60, 2);
-}
-
-function nextBackground() {
-  if (!state.backgrounds.length) return;
-  el.bg.style.backgroundImage = 'url("thumbs/' + state.backgrounds[state.bgIndex].file + '")';
-  state.bgIndex = (state.bgIndex + 1) % state.backgrounds.length;
+function pickClip() {
+  const last = state.recent.slice(-3);
+  let pool = state.clips.filter((c) => !last.includes(c.file));
+  if (!pool.length) pool = state.clips;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
 function pickGapMs() {
@@ -66,11 +70,12 @@ function pickGapMs() {
   return Math.max(MIN_GAP_MIN, minutes) * 60000;
 }
 
-function pickClip() {
-  const last = state.recent.slice(-3);
-  let pool = state.clips.filter((c) => !last.includes(c.file));
-  if (!pool.length) pool = state.clips;
-  return pool[Math.floor(Math.random() * pool.length)];
+function nextBackground() {
+  if (!state.backgrounds.length) return;
+  let index = state.bgIndex;
+  while (index === state.bgIndex) index = Math.floor(Math.random() * state.backgrounds.length);
+  state.bgIndex = index;
+  el.bg.style.backgroundImage = 'url("thumbs/' + state.backgrounds[index].file + '")';
 }
 
 function audioFor(clip) {
@@ -80,6 +85,17 @@ function audioFor(clip) {
     node.preload = "auto";
     node.volume = VOLUME;
     state.audio.set(clip.file, node);
+  }
+  return node;
+}
+
+function trickFor(file) {
+  let node = state.trickAudio.get(file);
+  if (!node) {
+    node = new Audio("tricks/" + file);
+    node.preload = "auto";
+    node.volume = VOLUME;
+    state.trickAudio.set(file, node);
   }
   return node;
 }
@@ -114,52 +130,81 @@ function fire() {
   }
 }
 
+function openComboWindow() {
+  state.comboOpenUntil = performance.now() + COMBO_WINDOW_MS;
+}
+
+function showCombo(count) {
+  const label = COMBO_LABELS[Math.min(count - 1, COMBO_LABELS.length - 1)];
+  el.combo.textContent = label;
+  el.combo.classList.remove("hit");
+  void el.combo.offsetWidth;
+  el.combo.classList.add("hit");
+  clearTimeout(comboHideTimer);
+  comboHideTimer = setTimeout(() => el.combo.classList.remove("hit"), 1100);
+}
+
+function playTrick(count) {
+  if (!state.tricks.length) return;
+  const band = Math.min(Math.floor((count - 1) / 5), state.tricks.length - 1);
+  const node = trickFor(state.tricks[band].file);
+  try {
+    node.currentTime = 0;
+  } catch {}
+  node.volume = VOLUME;
+  const started = node.play();
+  if (started && started.catch) started.catch(() => {});
+}
+
+function hit() {
+  if (!banana || banana.isFlipping()) return;
+  const now = performance.now();
+  state.combo = now <= state.comboOpenUntil ? state.combo + 1 : 1;
+  state.comboOpenUntil = 0;
+  showCombo(state.combo);
+  playTrick(state.combo);
+  banana.kickflip();
+}
+
 function start() {
   if (!state.clips.length || state.running) return;
   state.running = true;
   state.startedAt = Date.now();
   state.endsAt = state.startedAt + SESSION_MS;
   state.recent = [];
-
-  seven.set("00:00");
-  el.title.hidden = true;
-  el.clock.hidden = false;
-  el.hint.hidden = false;
-  el.activate.textContent = "deactivate";
+  el.app.classList.add("live");
+  el.activateLabel.textContent = "deactivate";
+  el.speaker.hidden = false;
   if (stars) stars.start();
-
-  const first = FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random();
-  state.nextAt = Date.now() + first * 1000;
+  if (banana) banana.setActive(true);
+  state.nextAt = Date.now() + (FIRST_GAP.min + (FIRST_GAP.max - FIRST_GAP.min) * Math.random()) * 1000;
 }
 
 function stop() {
   if (!state.running) return;
   state.running = false;
-  el.title.hidden = false;
-  el.clock.hidden = true;
-  el.hint.hidden = true;
-  el.activate.textContent = "activate";
+  el.app.classList.remove("live");
+  el.activateLabel.textContent = "activate";
+  el.speaker.hidden = true;
   if (stars) stars.stop();
+  if (banana) banana.setActive(false);
 }
 
 function update() {
   if (!state.running) return;
-  const now = Date.now();
-  if (now >= state.endsAt) {
-    seven.set(mmss(SESSION_MS));
+  if (Date.now() >= state.endsAt) {
     stop();
     return;
   }
-  if (now >= state.nextAt) fire();
-  seven.set(mmss(now - state.startedAt));
+  if (Date.now() >= state.nextAt) fire();
 }
 
 let audioUnlocked = false;
 function unlock() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  for (const clip of state.clips) {
-    const node = audioFor(clip);
+  const nodes = [...state.clips.map((clip) => audioFor(clip)), ...state.tricks.map((trick) => trickFor(trick.file))];
+  for (const node of nodes) {
     node.volume = 0;
     const started = node.play();
     if (started && started.then) {
@@ -183,6 +228,8 @@ el.activate.addEventListener("click", () => {
   }
 });
 
+el.banana.addEventListener("pointerdown", hit);
+
 async function loadSounds() {
   try {
     const response = await fetch("sounds/manifest.json", { cache: "no-cache" });
@@ -193,6 +240,17 @@ async function loadSounds() {
   }
   for (const clip of state.clips) audioFor(clip);
   setInterval(update, 200);
+}
+
+async function loadTricks() {
+  try {
+    const response = await fetch("tricks/manifest.json", { cache: "no-cache" });
+    if (!response.ok) return;
+    state.tricks = await response.json();
+  } catch {
+    return;
+  }
+  for (const trick of state.tricks) trickFor(trick.file);
 }
 
 async function loadBackgrounds() {
@@ -208,6 +266,6 @@ async function loadBackgrounds() {
   setInterval(nextBackground, BACKGROUND_MS);
 }
 
-startObjectLayer(el.objects);
 loadBackgrounds();
 loadSounds();
+loadTricks();

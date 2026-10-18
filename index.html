@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BOOST X1000</title>
 <meta name="description" content="Leave me running and just do your thing.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A2%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="512x512" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -14,17 +15,18 @@
 
 <canvas class="stars" id="stars" aria-hidden="true"></canvas>
 
-<canvas id="objects" aria-hidden="true"></canvas>
-
 <main class="app" id="app">
 
   <h1 class="title" id="title">BOOST X1000</h1>
 
-  <div class="seven" id="clock" hidden aria-label="session timer"></div>
+  <div class="banana-wrap">
+    <canvas class="banana" id="banana" aria-hidden="true"></canvas>
+    <span class="combo" id="combo" aria-hidden="true"></span>
+  </div>
 
-  <button class="activate" id="activate" type="button">activate</button>
+  <button class="activate" id="activate" type="button"><span class="speaker" id="speaker" hidden>&#128266;</span><span id="activate-label">activate</span></button>
 
-  <p class="hint" id="hint" hidden>leave me running and just do your thing my guy! feel your productivity go up instantly!</p>
+  <p class="hint" id="hint">leave me running and just do your thing my guy! feel your productivity go up instantly!</p>
 
 </main>
 

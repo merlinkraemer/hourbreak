@@ -19,11 +19,11 @@ body {
   margin: 0;
   min-height: 100vh;
   display: flex;
-  padding: 32px 20px 44px;
+  padding: 20px 20px 24px;
   overflow-x: clip;
   background: #000;
   font-family: var(--comic);
-  font-size: 17px;
+  font-size: 20px;
   line-height: 1.6;
 }
 
@@ -48,125 +48,98 @@ body {
   image-rendering: crisp-edges;
 }
 
-#objects {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
-
 .app {
   position: relative;
   margin: auto;
   width: 100%;
-  max-width: 520px;
+  max-width: min(1180px, 96vw);
   text-align: center;
 }
 
-.title {
-  margin: 0;
+.banana-wrap {
+  position: relative;
+}
+
+.combo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   font-family: var(--comic);
   font-weight: 700;
-  font-size: clamp(30px, 10vw, 54px);
-  line-height: 1.25;
+  font-size: clamp(44px, 11vw, 150px);
+  line-height: 1;
+  color: var(--yellow);
+  pointer-events: none;
+  opacity: 0;
+}
+
+.combo.hit { animation: combopop .8s ease-out forwards; }
+
+@keyframes combopop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); }
+  18% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+  45% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+
+.banana {
+  display: block;
+  width: 100%;
+  height: clamp(170px, 30vh, 400px);
+  margin: 0 auto;
+  cursor: pointer;
+  touch-action: manipulation;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.title {
+  margin: 0 0 1.4vw;
+  font-family: var(--comic);
+  font-weight: 700;
+  font-size: clamp(44px, 11vw, 148px);
+  line-height: 1.1;
   color: var(--blue);
 }
 
-.seven {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: calc(var(--u) * 1.5);
-  --u: clamp(9px, 2.9vw, 19px);
-  --w: calc(var(--u) * 5);
-  --h: calc(var(--u) * 10);
-  --t: var(--u);
-  margin: 6px 0;
-}
+.app.live .hint { visibility: visible; }
 
-.seven .digit {
-  position: relative;
-  width: var(--w);
-  height: var(--h);
-}
-
-.seven .digit i {
-  position: absolute;
-  display: block;
-  background: rgba(255, 255, 0, .07);
-}
-
-.seven .digit i.on { background: var(--yellow); }
-
-.seven .sa,
-.seven .sg,
-.seven .sd {
-  left: var(--t);
-  width: calc(var(--w) - 2 * var(--t));
-  height: var(--t);
-}
-
-.seven .sa { top: 0; }
-.seven .sg { top: calc((var(--h) - var(--t)) / 2); }
-.seven .sd { top: calc(var(--h) - var(--t)); }
-
-.seven .sb,
-.seven .sc,
-.seven .se,
-.seven .sf {
-  width: var(--t);
-  height: calc((var(--h) - 3 * var(--t)) / 2);
-}
-
-.seven .sf { left: 0; top: var(--t); }
-.seven .sb { left: calc(var(--w) - var(--t)); top: var(--t); }
-.seven .se { left: 0; top: calc((var(--h) + var(--t)) / 2); }
-.seven .sc { left: calc(var(--w) - var(--t)); top: calc((var(--h) + var(--t)) / 2); }
-
-.seven .colon {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-around;
-  width: var(--t);
-  height: var(--h);
-}
-
-.seven .colon i {
-  display: block;
-  width: var(--t);
-  height: var(--t);
-  background: var(--yellow);
-}
+.speaker { margin-right: .18em; text-decoration: none; }
 
 .activate {
-  display: inline-block;
-  margin: 30px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: .12em;
+  margin: 3vw 0 0;
   padding: 0;
   font-family: var(--comic);
-  font-size: clamp(28px, 8.5vw, 46px);
+  font-size: clamp(46px, 11vw, 152px);
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.35;
   color: var(--red);
   background: none;
   border: 0;
+  cursor: pointer;
+}
+
+#activate-label {
   text-decoration: underline;
   text-underline-offset: 7px;
-  cursor: pointer;
 }
 
 .activate:hover,
 .activate:active { color: #ff6b6b; }
 
 .hint {
-  margin: 22px auto 0;
-  max-width: 34em;
-  font-size: 17px;
-  line-height: 1.6;
+  margin: 2.4vw auto 0;
+  max-width: 22em;
+  font-size: clamp(28px, 3.6vw, 62px);
+  line-height: 1.35;
   color: var(--blue);
+  visibility: hidden;
 }
 
 .flash {
@@ -194,8 +167,8 @@ body {
 .flash span {
   font-family: var(--comic);
   font-weight: 700;
-  font-size: clamp(30px, 9vw, 64px);
-  line-height: 1.3;
+  font-size: clamp(36px, 8.5vw, 108px);
+  line-height: 1.2;
   text-align: center;
   color: var(--red);
 }

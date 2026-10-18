@@ -1,5 +1,6 @@
 export {
   Box3,
+  CanvasTexture,
   DoubleSide,
   Group,
   MeshBasicMaterial,
