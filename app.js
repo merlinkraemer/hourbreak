@@ -11,8 +11,6 @@ const el = {
   banana: $("banana"),
   confetti: $("confetti"),
   combo: $("combo"),
-  grade: $("grade"),
-  ring: $("ring"),
   burst: $("burst"),
   party: $("party"),
   strobe: $("strobe"),
@@ -30,13 +28,9 @@ const BACKGROUND_MS = 30000;
 const TRICK_VOLUME = 0.85;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
-const WINDOW_BEFORE = 170;
-const WINDOW_AFTER = 230;
-const WINDOW_FLOOR_BEFORE = 95;
-const WINDOW_FLOOR_AFTER = 140;
-const WINDOW_SHRINK = 4;
-const PERFECT_MS = 45;
-const LOCK_MS = 500;
+const WINDOW_BEFORE = 130;
+const WINDOW_AFTER = 190;
+const LOCK_MS = 750;
 const CRUISE_RANK = 20;
 const COMBO_BASE = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 const COMBO_FACTORS = [2.5, 2, 2, 5, 2, 2];
@@ -66,7 +60,6 @@ const state = {
   chain: 0,
   windowFrom: 0,
   windowTo: 0,
-  landAt: 0,
   attemptLive: false,
   queued: false,
   lockUntil: 0,
@@ -80,7 +73,6 @@ const banana = startBanana(el.banana, { onLanded: handleLanded });
 let missTimer = 0;
 let comboHideTimer = 0;
 let chaosTimer = 0;
-let gradeTimer = 0;
 let audioContext = null;
 let loudInput = null;
 let trickInput = null;
@@ -251,33 +243,10 @@ function launch(now, count) {
     state.attemptLive = false;
     return;
   }
-  const shrink = count * WINDOW_SHRINK;
-  state.landAt = now + ms;
-  state.windowFrom = state.landAt - Math.max(WINDOW_FLOOR_BEFORE, WINDOW_BEFORE - shrink);
-  state.windowTo = state.landAt + Math.max(WINDOW_FLOOR_AFTER, WINDOW_AFTER - shrink);
-  showRing(ms, state.windowTo - state.landAt);
+  state.windowFrom = now + ms - WINDOW_BEFORE;
+  state.windowTo = now + ms + WINDOW_AFTER;
   clearTimeout(missTimer);
-  missTimer = setTimeout(() => closeChain("late"), state.windowTo - now + 30);
-}
-
-function restart(node, ...classes) {
-  node.classList.remove("closing", "open", "miss", "hit", "broke", "perfect");
-  void node.offsetWidth;
-  node.classList.add(...classes);
-}
-
-function showRing(closeMs, openMs) {
-  el.ring.style.setProperty("--close", Math.round(closeMs) + "ms");
-  el.ring.style.setProperty("--open", Math.round(openMs) + "ms");
-  el.ring.style.setProperty("--hue", String((state.chain * 47 + 60) % 360));
-  restart(el.ring, "closing");
-}
-
-function showGrade(text, kind) {
-  el.grade.textContent = text;
-  restart(el.grade, kind);
-  clearTimeout(gradeTimer);
-  gradeTimer = setTimeout(() => el.grade.classList.remove("hit", "perfect", "miss"), 900);
+  missTimer = setTimeout(closeChain, state.windowTo - now + 30);
 }
 
 function handleLanded() {
@@ -314,7 +283,9 @@ function showCombo(count) {
   el.combo.style.setProperty("--level", String(rank));
   el.combo.style.setProperty("--hue", String((count * 47) % 360));
   el.combo.style.setProperty("--pop", String(1.1 + heat() * 0.45));
-  restart(el.combo, "hit");
+  el.combo.classList.remove("hit");
+  void el.combo.offsetWidth;
+  el.combo.classList.add("hit");
   clearTimeout(comboHideTimer);
   comboHideTimer = setTimeout(() => el.combo.classList.remove("hit"), 1000);
 }
@@ -364,31 +335,20 @@ function goCrazy(count) {
   if (stars) stars.boost(power * 16);
 }
 
-function closeChain(reason) {
+function closeChain() {
   const broke = state.chain > 0;
-  const clicked = reason === "early";
-  if (broke || clicked) {
-    if (broke) playFail();
+  if (broke) {
+    playFail();
     if (banana) {
       banana.abort();
-      banana.wobble(broke ? 1 : 0.55);
+      banana.shake(0.22);
       banana.setIntensity(1);
     }
-    restart(el.ring, "miss");
-    if (reason) showGrade(clicked ? "TOO EARLY" : "TOO LATE", "miss");
-  } else {
-    el.ring.classList.remove("closing", "open");
-  }
-  if (broke) {
-    el.combo.textContent = comboLabel(state.chain);
-    restart(el.combo, "broke");
-  } else {
-    el.combo.classList.remove("hit");
   }
   state.chain = 0;
   state.attemptLive = false;
-  state.queued = false;
   state.lockUntil = performance.now() + LOCK_MS;
+  el.combo.classList.remove("hit");
 }
 
 function hit() {
@@ -398,24 +358,21 @@ function hit() {
   const inWindow = now >= state.windowFrom && now <= state.windowTo;
 
   if (inWindow) {
-    const perfect = Math.abs(now - state.landAt) <= PERFECT_MS;
     state.chain += 1;
     state.windowFrom = 0;
     state.windowTo = 0;
     state.attemptLive = true;
     clearTimeout(missTimer);
-    restart(el.ring, perfect ? "perfect" : "hit");
-    showGrade(perfect ? "PERFECT!" : "NICE", perfect ? "perfect" : "hit");
     showCombo(state.chain);
     playComboTrick(state.chain);
-    goCrazy(state.chain + (perfect ? 2 : 0));
+    goCrazy(state.chain);
     if (banana.isFlipping()) state.queued = true;
     else launch(now, state.chain);
     return;
   }
 
   if (state.attemptLive) {
-    closeChain("early");
+    closeChain();
     return;
   }
 
