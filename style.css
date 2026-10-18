@@ -90,22 +90,25 @@ body {
   pointer-events: none;
 }
 
+.shade {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 44% 46% at 50% 50%,
+    rgba(0, 0, 0, .86),
+    rgba(0, 0, 0, .55) 60%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
 .app {
   position: relative;
   margin: auto;
-  isolation: isolate;
   width: 100%;
   max-width: 460px;
   text-align: center;
-}
-
-.app::before {
-  content: "";
-  position: absolute;
-  inset: -56px -46px;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 76% 94% at 50% 50%, rgba(0, 0, 0, .86), rgba(0, 0, 0, .6) 64%, rgba(0, 0, 0, 0) 100%);
 }
 
 .title {
@@ -309,6 +312,17 @@ input[type="range"] { width: 74px; accent-color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   .bg-layer.on { animation: none; }
   .shake { animation: none; }
+}
+
+@media (max-width: 560px) {
+  .shade {
+    background: linear-gradient(
+      rgba(0, 0, 0, .28),
+      rgba(0, 0, 0, .74) 22%,
+      rgba(0, 0, 0, .74) 78%,
+      rgba(0, 0, 0, .28)
+    );
+  }
 }
 
 @media (max-width: 420px) {
