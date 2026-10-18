@@ -28,8 +28,9 @@ const BACKGROUND_MS = 30000;
 const TRICK_VOLUME = 0.85;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
-const WINDOW_BEFORE = 160;
-const WINDOW_AFTER = 220;
+const WINDOW_BEFORE = 130;
+const WINDOW_AFTER = 190;
+const LOCK_MS = 750;
 const CRUISE_RANK = 20;
 const COMBO_BASE = [1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
 const COMBO_FACTORS = [2.5, 2, 2, 5, 2, 2];
@@ -61,6 +62,7 @@ const state = {
   windowTo: 0,
   attemptLive: false,
   queued: false,
+  lockUntil: 0,
 };
 
 const root = document.documentElement;
@@ -346,21 +348,25 @@ function goCrazy(count) {
 }
 
 function closeChain() {
-  if (state.chain > 0) {
+  const broke = state.chain > 0;
+  if (broke) {
     playFail();
     if (banana) {
-      banana.shake(0.16);
+      banana.abort();
+      banana.shake(0.22);
       banana.setIntensity(1);
     }
   }
   state.chain = 0;
   state.attemptLive = false;
+  state.lockUntil = performance.now() + LOCK_MS;
   el.combo.classList.remove("hit");
 }
 
 function hit() {
   if (!banana) return;
   const now = performance.now();
+  if (now < state.lockUntil) return;
   const inWindow = now >= state.windowFrom && now <= state.windowTo;
 
   if (inWindow) {

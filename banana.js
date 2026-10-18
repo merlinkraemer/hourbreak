@@ -161,7 +161,8 @@ export function startBanana(canvas, options) {
       const decay = (shakeUntil - now) / SHAKE_MS;
       const energy = shakeAmount * decay;
       jitter.position.set((Math.random() * 2 - 1) * energy, (Math.random() * 2 - 1) * energy, 0);
-      jitter.rotation.z = (Math.random() * 2 - 1) * 0.1 * decay;
+      jitter.rotation.z = (Math.random() * 2 - 1) * 0.16 * decay;
+      jitter.scale.setScalar(1 - 0.14 * decay);
     } else if (jitter.position.x !== 0 || jitter.position.y !== 0 || jitter.rotation.z !== 0) {
       jitter.position.set(0, 0, 0);
       jitter.rotation.z = 0;
@@ -226,6 +227,12 @@ export function startBanana(canvas, options) {
   return {
     setActive(active) {
       targetSpin = active ? SPIN_ACTIVE : SPIN_IDLE;
+    },
+    abort() {
+      flipping = false;
+      pivot.rotation.x = 0;
+      pivot.rotation.z = 0;
+      pivot.position.y = 0;
     },
     kickflip,
     get flipMs() {
