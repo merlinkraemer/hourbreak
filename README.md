@@ -71,15 +71,22 @@ a Tony Hawk trick sound, banded by combo count:
 
 | combo | sound |
 |---|---|
-| 1–5 | `special-trick` |
+| 1–5 | `enter` |
 | 6–10 | `combo-1` |
 | 11–15 | `combo-2` |
 | 16–20 | `combo-3` |
 | … | `combo-4` … `combo-7` |
 
+`enter.mp3` is not a Tony Hawk sound: it is `gutsus-shop-section-enter.wav`, the opener sting.
+It plays on the first click of a chain, on combos 1–5 as the band sound, and layered over every
+other band sound on combos 6+. Every play is detuned by a random ±5 cents on top of its rate,
+and the layered copy runs at `ENTER_VOLUME` (0.6) through its own gain node so it never stops the
+band sound. The file is named `enter.mp3` rather than reusing `special-trick.mp3` because
+`tricks/` is served `immutable` for a year.
+
 ```sh
 bash scripts/build-banana.sh                 # default model, reads HB_BANANA_ZIP
-bash scripts/fetch-tricks.sh                 # 8 trick sounds from myinstants
+bash scripts/fetch-tricks.sh                 # 7 trick sounds from myinstants
 ```
 
 `build-banana.sh` extracts `OBJ_BANANA_02_LOD100` (the bunch — `OBJ_BANANA_01_*` is the single
@@ -156,7 +163,7 @@ Installs `three` + `esbuild` into a temp dir, bundles `scripts/three-entry.js`, 
 | folder | size | what |
 |---|---|---|
 | `sounds/` | 1.5 MB | 42 noises |
-| `tricks/` | 292 KB | 8 Tony Hawk trick sounds |
+| `tricks/` | 300 KB | 7 Tony Hawk trick sounds + the opener sting |
 | `thumbs/` | 376 KB | 15 background photos |
 | `vendor/` | 608 KB | three.js bundle (151 KB gzipped) |
 | `banana/` | 24 KB | the banana bunch GLB |

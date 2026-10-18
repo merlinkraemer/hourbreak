@@ -29,6 +29,9 @@ const BACKGROUND_MS = 30000;
 const HINT_MS = 4000;
 const TRICK_VOLUME = 0.85;
 const OPENER_RATE = 0.85;
+const ENTER_FILE = "enter.mp3";
+const ENTER_VOLUME = 0.6;
+const ENTER_CENTS = 5;
 const LOUD_GAIN = 3.6;
 const MIN_GAP_MIN = 30;
 const WINDOW_BEFORE = 130;
@@ -81,6 +84,7 @@ let hintTimer = 0;
 let audioContext = null;
 let loudInput = null;
 let trickInput = null;
+let enterInput = null;
 let keepAlive = null;
 let primed = false;
 const buffers = new Map();
@@ -175,6 +179,9 @@ function audioGraph() {
   trickInput = audioContext.createGain();
   trickInput.gain.value = TRICK_VOLUME;
   trickInput.connect(audioContext.destination);
+  enterInput = audioContext.createGain();
+  enterInput.gain.value = ENTER_VOLUME;
+  enterInput.connect(audioContext.destination);
   audioContext.addEventListener("statechange", () => {
     if (state.running && audioContext.state !== "running") resumeAudio();
   });
@@ -303,6 +310,10 @@ function handleLanded() {
   if (state.queued) launch(performance.now(), state.chain);
 }
 
+function centShift() {
+  return Math.pow(2, ((Math.random() * 2 - 1) * ENTER_CENTS) / 1200);
+}
+
 function playTrick(file, rate) {
   if (!audioContext) return;
   if (state.trickSource) {
@@ -310,17 +321,24 @@ function playTrick(file, rate) {
       state.trickSource.stop();
     } catch {}
   }
-  playBuffer("tricks/" + file, trickInput, rate)
+  playBuffer("tricks/" + file, trickInput, rate * (file === ENTER_FILE ? centShift() : 1))
     .then((source) => {
       state.trickSource = source;
     })
     .catch(() => {});
 }
 
+function playEnterLayer() {
+  if (!audioContext) return;
+  playBuffer("tricks/" + ENTER_FILE, enterInput, centShift()).catch(() => {});
+}
+
 function playComboTrick(count) {
   if (!state.tricks.length) return;
   const band = Math.min(Math.floor((count - 1) / 5), state.tricks.length - 1);
-  playTrick(state.tricks[band].file, Math.min(1 + (count - 1) * 0.07, 2.1));
+  const file = state.tricks[band].file;
+  playTrick(file, Math.min(1 + (count - 1) * 0.07, 2.1));
+  if (file !== ENTER_FILE) playEnterLayer();
 }
 
 function playFail() {

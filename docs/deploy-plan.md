@@ -22,7 +22,7 @@ Nothing here needs a build. Every host below can take the folder as-is.
 Every sound on the site is somebody else's:
 
 - `sounds/` — 42 clips ripped from YouTube with yt-dlp
-- `tricks/` — 9 Tony Hawk sound effects from myinstants.com
+- `tricks/` — 7 Tony Hawk sound effects from myinstants.com + 1 local opener sting
 - `thumbs/` — 15 YouTube video thumbnails
 - `banana/` — a GameCube Super Monkey Ball model rip from a fan resource site
 
