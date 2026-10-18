@@ -1,20 +1,19 @@
 # hourbreak
 
-A productivity app.
+One hour of silence, occasionally broken by completely random noises. Every gap is at
+least 30 minutes.
 
-It is not a productivity app. It is one hour of silence, occasionally broken by
-completely random noises — presented as a deep-fried, Geocities-era piece of
-productivity software that never once admits what it actually does. You press the big
-button, you leave the tab open because it told you to, and a metal pipe falls on your
-head twenty minutes later.
+It is not a productivity app. It is presented as a deep-fried, Geocities-era piece of
+productivity software that never once admits what it actually does. You press START, you
+leave the tab open because it told you to, and a metal pipe falls on your head twenty
+minutes later.
 
 Nothing on the page says "sound", "noise" or "silence" in the visitor-facing copy. The
-sounds are "optimization modules", the log is a "live productivity feed", the volume
-slider is "intensity", and the 22-clip list is hidden behind a collapsed
-"soundscape engine spec" panel so the first impression stays pristine.
+sounds are "optimization modules", the volume slider is "intensity", and the 22-clip list is
+hidden behind a collapsed "modules" panel so the first impression stays pristine.
 
-The gaps are drawn from a heavy-tailed random distribution, so the site never settles
-into a rhythm you can feel.
+The page is deliberately tiny: a WordArt header, one LCD timer, two buttons, three readout
+numbers, one hint line, one collapsed panel, one footer link.
 
 ## Run it
 
@@ -28,28 +27,31 @@ and a folder of 32 kHz mono mp3s.
 
 ## How the silence works
 
-Each gap is drawn from one of three buckets:
+Each gap is drawn from one of three buckets, and never falls below **30 minutes**:
 
 | bucket | weight | range |
 |---|---|---|
-| normal | 62% | 18s – 2m 25s |
-| long | 28% | 2m 25s – 6m |
-| very long | 10% | 6m – 13m |
+| normal | 55% | 30m – 45m |
+| long | 30% | 45m – 80m |
+| very long | 15% | 80m – 150m |
 
-Inside a bucket the value is skewed toward the low end with `Math.pow(random, 1.9)`, so
-most gaps are short and a few are enormous. The first gap of a session is deliberately
-short (7–45s) so you can see that it works. There is a 9% chance of a double noise 0.4–1.1s
-after the previous one, and no clip repeats within its last three plays.
+Inside a bucket the value is skewed toward the low end with `Math.pow(random, 1.9)`. Measured
+over 200k draws: min 30.0m, median 42.5m, p95 112.7m, max 150.0m, zero gaps under 30m. So a
+1-hour session gets one or two noises, which is the point.
+
+The **first** gap of a session is the one exception — 8–50 seconds, so you can confirm it
+works before walking away. Everything after that obeys the 30-minute floor. There is also a
+9% chance of a double noise 0.4–1.1s after the previous one, and no clip repeats within its
+last three plays.
 
 The countdown is hidden by default. There is a checkbox if you want to cheat.
 
 ## The aesthetic
 
 Two layers stacked on purpose. Underneath: 1998 Geocities — tiled starfield, arced
-WordArt logo, `<marquee>`, beveled ridge borders, a visitor counter, webring navigation,
-an 88x31-ish badge row. On top: deep-fried meme — whole-page saturate/contrast boost, a
-tiled turbulence overlay, a spinning starburst behind the logo, chromatic aberration on
-the wordmark, Impact everywhere with hard black outlines, and a few emoji.
+WordArt logo, a `<marquee>`, beveled ridge borders, rainbow rule. On top: deep-fried meme —
+whole-page saturate/contrast boost, a tiled turbulence overlay, chromatic aberration on the
+wordmark, Impact everywhere with hard black outlines.
 
 ## The module library
 
